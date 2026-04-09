@@ -1,0 +1,43 @@
+[
+
+  { "name": "Home", "path": "/", "meta": { "title": "QMS首页", "requiresAuth": true, "iconClass": "bi bi-house-door" }, "redirect": "/quality/qmshome" },
+
+  { "name":"QMSHome","path":"/quality/qmshome","component":"@/views/home.vue","meta":{"title":"QMS门户","requiresAuth":true,"iconClass":"bi bi-house-door"}},
+  {
+    "name":"Quality",
+    "path":"/quality",
+    "meta":{"title":"质量报告","requiresAuth":true,"iconClass":"bi bi-clipboard-data"},
+    "children":[
+      {
+        "name":"QualityReport",
+        "path":"report",
+        "meta":{"title":"COA报告","requiresAuth":true,"isKeepAlive":true,"order":1,"iconClass":"bi bi-clipboard-data","elmenuitemgroup":"质量报告"},
+        "component":"@/views/reports/quality-report.vue"
+      },
+      {
+        "name":"LmeDetail",
+        "path":"lme",
+        "meta":{"title":"LME相关","requiresAuth":true,"isKeepAlive":true,"order":2,"iconClass":"bi bi-clipboard-data","elmenuitemgroup":"质量报告"},
+        "component":"@/views/reports/lme-report.vue"
+      }
+    ]
+  },
+  {
+    "name":"Unauthorized",
+    "path":"/quality/unauthorized",
+    "meta":{"title":"访问未授权","requiresAuth":false,"iconClass":"bi bi-shield-exclamation"},
+    "component":"@/views/errors/403.vue"
+  },
+  {
+    "name":"NotFound",
+    "path":"/quality/not-found",
+    "meta":{"title":"页面未找到","requiresAuth":false,"iconClass":"bi bi-search"},
+    "component":"@/views/errors/404.vue"
+  },
+  {
+    "name":"QualityCatchAll",
+    "path":"/quality/:pathMatch(.*)*",
+    "meta":{"title":"页面未找到","requiresAuth":false,"iconClass":"bi bi-search"},
+    "redirect":"/quality/not-found"
+  }
+]
