@@ -3,13 +3,11 @@
     <div class="card">
       <div class="title-row">
         <div>
-          <h1>LME传输记录</h1>
-          <div class="subtitle">按时间范围查询LME传输状态及明细</div>
+          <h1>{{ t('lmeReport.title') }}</h1>
+          <div class="subtitle">{{ t('lmeReport.subtitle') }}</div>
         </div>
         <div class="title-actions">
-          <t-button theme="primary" size="small" variant="base" @click="goHome">
-            返回主页
-          </t-button>
+          <HomeNavButton />
           <div :class="['status-badge', hasError ? 'status-error' : 'status-ok']">
             {{ statusText }}
           </div>
@@ -22,6 +20,8 @@
           <JoSearchPanel
             ref="searchPanelRef"
             :fields="searchFields"
+            :search-text="t('common.query')"
+            :reset-text="t('common.reset')"
             v-model="searchValues"
             :collapsible="true"
             :collapsed="false"
@@ -49,7 +49,7 @@
 
       <div class="status-bar">
         <div>{{ message }}</div>
-        <div>共 {{ rows.length }} 条记录</div>
+        <div>{{ t('common.allRecords', { count: rows.length }) }}</div>
       </div>
 
       <JoTable
@@ -80,14 +80,16 @@
 </template>
 
 <script setup lang="ts">
-import { ref, onMounted } from 'vue'
-import { useRouter } from 'vue-router'
+import { ref, computed, onMounted } from 'vue'
+import { useI18n } from 'vue-i18n'
 import JoTable from '@/components/basic/table/JoTable.vue'
 import JoSearchPanel from '@/components/basic/search-panel/JoSearchPanel.vue'
+import HomeNavButton from '@/components/basic/HomeNavButton.vue'
+import { qmApi } from '@/api/modules'
 import type { JoTableColumn } from '@/components/basic/table/JoTable.vue'
 import type { SearchField } from '@/components/basic/search-panel/JoSearchPanel.vue'
 
-const router = useRouter()
+const { t, locale } = useI18n()
 
 const now = new Date()
 const currentYear = now.getFullYear()
@@ -104,17 +106,37 @@ const formatDate = (date: Date) => {
 
 const startDate = ref(formatDate(firstDay))
 // 搜索字段配置
-const searchFields: SearchField[] = [
-  { key: 'dateRange', label: '记录时间', type: 'date-range', startPlaceholder: '起始日期', endPlaceholder: '截止日期' },
-  { key: 'orderNumber', label: '单号', type: 'text', placeholder: '支持模糊搜索' },
-  { key: 'grade', label: '牌号', type: 'text', placeholder: '支持模糊搜索' },
-  { key: 'lmeStatus', label: 'LME status', type: 'select', options: [
-      { label: 'All', value: '' },
-      { label: 'Transmitted', value: 'Success' },
-      { label: 'Transmission failed', value: 'Failed' }
-    ] 
+const searchFields = computed<SearchField[]>(() => [
+  {
+    key: 'dateRange',
+    label: t('lmeReport.search.recordTime'),
+    type: 'date-range',
+    startPlaceholder: t('lmeReport.search.startDate'),
+    endPlaceholder: t('lmeReport.search.endDate')
+  },
+  {
+    key: 'orderNumber',
+    label: t('lmeReport.search.orderNumber'),
+    type: 'text',
+    placeholder: t('lmeReport.search.supportsFuzzy')
+  },
+  {
+    key: 'grade',
+    label: t('lmeReport.search.grade'),
+    type: 'text',
+    placeholder: t('lmeReport.search.supportsFuzzy')
+  },
+  {
+    key: 'lmeStatus',
+    label: t('lmeReport.search.lmeStatus'),
+    type: 'select',
+    options: [
+      { label: t('lmeReport.search.all'), value: '' },
+      { label: t('lmeReport.search.transmitted'), value: 'Success' },
+      { label: t('lmeReport.search.failed'), value: 'Failed' }
+    ]
   }
-]
+])
 
 // 搜索值
 const endDateForDisplay = ref(formatDate(lastDay))
@@ -129,28 +151,35 @@ const grade = ref('')
 const lmeStatus = ref('')
 const rows = ref<any[]>([])
 const loading = ref(false)
-const statusText = ref('就绪')
+const statusText = ref(String(t('common.ready')))
 const hasError = ref(false)
-const message = ref(`默认查询 ${startDate.value} ~ ${endDateForDisplay.value} 记录`)
+const message = ref(String(t('lmeReport.defaultQuery', { start: startDate.value, end: endDateForDisplay.value })))
 
 // 搜索面板引用
 const searchPanelRef = ref<InstanceType<typeof JoSearchPanel>>()
 
 // 日期快捷键
-const dateShortcuts = ref(['本月', '上月', '本季', '上季', '今日', '昨日'])
+const dateShortcuts = computed(() => [
+  String(t('lmeReport.shortcuts.currentMonth')),
+  String(t('lmeReport.shortcuts.lastMonth')),
+  String(t('lmeReport.shortcuts.currentQuarter')),
+  String(t('lmeReport.shortcuts.lastQuarter')),
+  String(t('lmeReport.shortcuts.today')),
+  String(t('lmeReport.shortcuts.yesterday'))
+])
 
 // 表格列配置
-const tableColumns: JoTableColumn[] = [
-  { key: 'orderNumber', title: '单号', sortable: true, filterable: true, filterPlaceholder: '搜索单号', width: '140px' },
-  { key: 'grade', title: '牌号', sortable: true, filterable: true, filterPlaceholder: '搜索牌号', width: '90px' },
-  { key: 'totalPackages', title: '总捆数', sortable: true, width: '90px' },
-  { key: 'totalWeight', title: '总重量', sortable: true, width: '90px' },
-  { key: 'lmeStatus', title: '传输状态', sortable: true, filterable: true, width: '100px' },
-  { key: 'createTime', title: '记录时间', sortable: true, width: '160px' },
-  { key: 'syncTime', title: '同步LME时间', sortable: true, width: '160px' },
-  { key: 'syncUser', title: '同步人', sortable: true, filterable: true, width: '100px' },
-  { key: 'lmeMessage', title: 'LME返回信息', sortable: false, filterable: true }
-]
+const tableColumns = computed<JoTableColumn[]>(() => [
+  { key: 'orderNumber', title: t('lmeReport.table.orderNumber'), sortable: true, filterable: true, filterPlaceholder: t('lmeReport.table.searchOrderNumber'), width: '140px' },
+  { key: 'grade', title: t('lmeReport.table.grade'), sortable: true, filterable: true, filterPlaceholder: t('lmeReport.table.searchGrade'), width: '90px' },
+  { key: 'totalPackages', title: t('lmeReport.table.totalPackages'), sortable: true, width: '90px' },
+  { key: 'totalWeight', title: t('lmeReport.table.totalWeight'), sortable: true, width: '90px' },
+  { key: 'lmeStatus', title: t('lmeReport.table.lmeStatus'), sortable: true, filterable: true, width: '100px' },
+  { key: 'createTime', title: t('lmeReport.table.createTime'), sortable: true, width: '160px' },
+  { key: 'syncTime', title: t('lmeReport.table.syncTime'), sortable: true, width: '160px' },
+  { key: 'syncUser', title: t('lmeReport.table.syncUser'), sortable: true, filterable: true, width: '100px' },
+  { key: 'lmeMessage', title: t('lmeReport.table.lmeMessage'), sortable: false, filterable: true, filterPlaceholder: t('common.search') }
+])
 
 // 表格引用
 const tableRef = ref<InstanceType<typeof JoTable>>()
@@ -190,8 +219,8 @@ function handleReset() {
   tableRef.value?.reset()
   
   rows.value = []
-  statusText.value = '就绪'
-  message.value = '已重置查询条件'
+  statusText.value = String(t('common.ready'))
+  message.value = String(t('lmeReport.resetDone'))
 }
 
 // 处理日期快捷键点击
@@ -203,29 +232,29 @@ function handleDateShortcut(shortcut: string) {
   let firstDay: Date, lastDay: Date
   
   switch (shortcut) {
-    case '今日':
+    case t('lmeReport.shortcuts.today'):
       firstDay = new Date(now)
       lastDay = new Date(now)
       break
-    case '昨日':
+    case t('lmeReport.shortcuts.yesterday'):
       const yesterday = new Date(now.getTime() - 24 * 60 * 60 * 1000)
       firstDay = yesterday
       lastDay = yesterday
       break
-    case '本月':
+    case t('lmeReport.shortcuts.currentMonth'):
       firstDay = new Date(currentYear, currentMonth, 1)
       lastDay = new Date(currentYear, currentMonth + 1, 0)
       break
-    case '上月':
+    case t('lmeReport.shortcuts.lastMonth'):
       firstDay = new Date(currentYear, currentMonth - 1, 1)
       lastDay = new Date(currentYear, currentMonth, 0)
       break
-    case '本季':
+    case t('lmeReport.shortcuts.currentQuarter'):
       const currentQuarter = Math.floor(currentMonth / 3)
       firstDay = new Date(currentYear, currentQuarter * 3, 1)
       lastDay = new Date(currentYear, (currentQuarter + 1) * 3, 0)
       break
-    case '上季':
+    case t('lmeReport.shortcuts.lastQuarter'):
       const lastQuarter = Math.floor(currentMonth / 3) - 1
       firstDay = new Date(currentYear, lastQuarter * 3, 1)
       lastDay = new Date(currentYear, (lastQuarter + 1) * 3, 0)
@@ -247,7 +276,7 @@ function handleDateShortcut(shortcut: string) {
 async function fetchData(isInitial: boolean) {
   loading.value = true
   hasError.value = false
-  statusText.value = '正在查询...'
+  statusText.value = String(t('common.querying'))
   
   const params = new URLSearchParams()
   if (startDate.value) params.append('startDate', startDate.value)
@@ -262,42 +291,33 @@ async function fetchData(isInitial: boolean) {
   if (grade.value.trim()) searchInfo.push(`牌号：${grade.value.trim()}`)
   if (lmeStatus.value.trim()) searchInfo.push(`状态：${lmeStatus.value.trim()}`)
   
-  message.value = searchInfo.length > 0 ? `查询条件：${searchInfo.join('，')}` : '查询所有记录'
+  message.value = searchInfo.length > 0
+    ? String(t('lmeReport.queryConditions', { conditions: searchInfo.join('，') }))
+    : String(t('lmeReport.queryAll'))
 
   try {
-    const resp = await fetch(`/api/qm/lme-report?${params.toString()}`)
+    const resp = await qmApi.getLmeReport(Object.fromEntries(params))
 
-    if (!resp.ok) {
-      throw new Error(`HTTP ${resp.status}: ${resp.statusText}`)
+    if (!resp.success) {
+      throw new Error(resp.message || '查询失败')
     }
 
-    const responseText = await resp.text()
-    if (!responseText.trim()) {
-      throw new Error('服务器返回空响应')
-    }
-
-    let json
-    try {
-      json = JSON.parse(responseText)
-    } catch (parseError: any) {
-      throw new Error(`JSON解析失败: ${parseError instanceof Error ? parseError.message : String(parseError)}`)
-    }
-
-    if (json.success && json.data) {
-      rows.value = json.data || []
-      statusText.value = '查询完成'
+    const json = resp.data
+    if (json) {
+      rows.value = json || []
+      statusText.value = String(t('common.queryDone'))
       hasError.value = false
       
-      const recordCount = json.data.length || 0
-      message.value = isInitial 
-        ? `默认查询完成，共 ${recordCount} 条记录` 
-        : `查询完成，共 ${recordCount} 条记录`
+      const recordCount = json.length || 0
+      message.value = isInitial
+        ? String(t('lmeReport.defaultQueryDone', { count: recordCount }))
+        : String(t('lmeReport.queryDone', { count: recordCount }))
     } else {
       throw new Error(json.message || '查询失败')
     }
   } catch (error) {
     console.error('查询失败:', error)
-    statusText.value = '查询失败'
+    statusText.value = String(t('common.queryFailed'))
     hasError.value = true
     message.value = `查询失败: ${error instanceof Error ? error.message : String(error)}`
   } finally {
@@ -312,23 +332,13 @@ function onTableSortChange(field: string, order: 'asc' | 'desc') {
 function formatDateTime(dateStr: string) {
   if (!dateStr) return '-'
   const date = new Date(dateStr)
-  return date.toLocaleString('zh-CN')
+  return date.toLocaleString(locale.value === 'en-US' ? 'en-US' : 'zh-CN')
 }
 
 function getStatusClass(status: string) {
   if (status === '已传输' || status === '成功') return 'text-success'
   if (status === '传输失败' || status === '失败') return 'text-error'
   return ''
-}
-
-function goHome() {
-  const bridge = (window as any).qmBridge
-  if (bridge && typeof bridge.navigateHome === 'function') {
-    bridge.navigateHome()
-    return
-  }
-
-  router.push('/')
 }
 
 // 生命周期

@@ -13,22 +13,22 @@
         <div class="pulse-ring"></div>
       </div>
       <div class="content">
-        <h1>页面未找到</h1>
-        <p>抱歉，您访问的页面不存在或已被移动。</p>
-        <p class="hint">您可以尝试返回上一页或访问主页查找所需内容。</p>
+        <h1>{{ t('errors.notFoundTitle') }}</h1>
+        <p>{{ t('errors.notFoundDesc') }}</p>
+        <p class="hint">{{ t('errors.notFoundHint') }}</p>
       </div>
       <div class="actions">
-        <button class="btn-primary" @click="goBack" aria-label="返回上一页">
+        <button class="btn-primary" @click="goBack" :aria-label="t('common.back')">
           <svg class="btn-icon" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
             <path d="M19 12H5M5 12L12 19M5 12L12 5" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
           </svg>
-          返回上一页
+          {{ t('common.back') }}
         </button>
-        <button class="btn-secondary" @click="goHome" aria-label="返回主页">
+        <button class="btn-secondary" @click="goHome" :aria-label="t('common.home')">
           <svg class="btn-icon" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
             <path d="M3 12L5 10M5 10L12 3L19 10M5 10V20H19V10" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
           </svg>
-          返回主页
+          {{ t('common.home') }}
         </button>
       </div>
     </div>
@@ -37,8 +37,10 @@
 
 <script setup lang="ts">
 import { useRouter } from 'vue-router'
+import { useI18n } from 'vue-i18n'
 
 const router = useRouter()
+const { t } = useI18n()
 
 const goBack = () => {
   window.history.back()

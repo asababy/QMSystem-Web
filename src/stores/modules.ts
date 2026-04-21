@@ -1,5 +1,6 @@
 import { defineStore } from 'pinia'
 import { ref } from 'vue'
+import { qmApi } from '@/api/modules'
 
 export interface Module {
   id: string
@@ -26,18 +27,12 @@ export const useModulesStore = defineStore('modules', () => {
   const loadModules = async () => {
     loading.value = true
     error.value = ''
-    
+
     try {
-      const response = await fetch('/api/modules')
-      
-      if (!response.ok) {
-        throw new Error(`HTTP error! status: ${response.status}`)
-      }
-      
-      const data = await response.json()
-      
-      if (data.success) {
-        modules.value = data.data.map((item: any) => ({
+      const response = await qmApi.getModules()
+
+      if (response.success) {
+        modules.value = response.data.map((item: any) => ({
           id: item.id || item.name,
           name: item.name,
           description: item.description || item.desc,
@@ -54,7 +49,7 @@ export const useModulesStore = defineStore('modules', () => {
         }))
       } else {
         // API 返回失败，使用默认模块
-        console.warn('API 返回失败，使用默认模块:', data.message)
+        console.warn('API 返回失败，使用默认模块:', response.message)
         modules.value = getDefaultModules()
       }
     } catch (err) {
@@ -90,16 +85,14 @@ export const useModulesStore = defineStore('modules', () => {
   const handleDownload = async (module: Module) => {
     try {
       // 记录下载统计
-      await fetch(`/api/${module.id}/download`, {
-        method: 'POST'
-      })
-      
+      await qmApi.recordModuleDownload(module.id)
+
       // 更新下载次数
       const moduleIndex = modules.value.findIndex(m => m.id === module.id)
       if (moduleIndex !== -1) {
         modules.value[moduleIndex].downloads++
       }
-      
+
       // 打开模块页面
       window.open(module.url, '_blank')
     } catch (error) {

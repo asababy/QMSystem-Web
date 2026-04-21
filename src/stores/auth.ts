@@ -1,5 +1,7 @@
 import { defineStore } from 'pinia'
 import { ref, computed } from 'vue'
+import { authApi } from '@/api/modules'
+import type { LoginRequest } from '@/api/types/auth.types'
 
 export interface User {
   id: string
@@ -45,17 +47,11 @@ export const useAuthStore = defineStore('auth', () => {
     const token = localStorage.getItem('accessToken')
     if (token) {
       try {
-        // 验证 token 有效性（可选，也可以直接解析）
-        const response = await fetch('/api/auth', {
-          headers: {
-            'Authorization': `Bearer ${token}`
-          }
-        })
+        // 验证 token 有效性
+        const response = await authApi.verifyToken()
         
-        if (response.ok) {
-          const data = await response.json()
-          // 如果需要验证，可以调用验证接口
-          // 否则直接解析 token
+        if (response.success) {
+          // 解析 token 获取用户信息
           user.value = parseJwtToken(token)
           requiresAuthenticated.value = true
         } else {
@@ -73,43 +69,32 @@ export const useAuthStore = defineStore('auth', () => {
     loading.value = true
     try {
       // 第一步：获取 auth code
-      const codeResponse = await fetch('/api/login/sso', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json'
-        },
-        body: JSON.stringify(credentials)
+      const codeResponse = await authApi.getSsoCode({
+        username: credentials.Username,
+        password: credentials.Password
       })
-
-      const codeData = await codeResponse.json()
       
-      if (!codeData.success) {
-        return { success: false, message: codeData.message || '认证失败' }
+      if (!codeResponse.success) {
+        return { success: false, message: codeResponse.message || '认证失败' }
       }
 
       // 第二步：用 code 换取 JWT token
-      const tokenResponse = await fetch('/api/login/exchange-token', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json'
-        },
-        body: JSON.stringify({ code: codeData.data })
+      const tokenResponse = await authApi.exchangeToken({
+        code: codeResponse.data.code
       })
 
-      const tokenData = await tokenResponse.json()
-
-      if (tokenData.success) {
+      if (tokenResponse.success) {
         // 保存 JWT token
-        localStorage.setItem('accessToken', tokenData.data.token)
+        localStorage.setItem('accessToken', tokenResponse.data.token)
         
         // 解析用户信息
-        const userInfo = parseJwtToken(tokenData.data.token)
+        const userInfo = parseJwtToken(tokenResponse.data.token)
         user.value = userInfo
         requiresAuthenticated.value = true
         
         return { success: true }
       } else {
-        return { success: false, message: tokenData.message || 'Token 交换失败' }
+        return { success: false, message: tokenResponse.message || 'Token 交换失败' }
       }
     } catch (error) {
       console.error('Login failed:', error)
@@ -122,16 +107,7 @@ export const useAuthStore = defineStore('auth', () => {
   // 登出
   const logout = async () => {
     try {
-      const token = localStorage.getItem('accessToken')
-      if (token) {
-        // 调用后端登出接口记录日志
-        await fetch('/api/logout', {
-          method: 'POST',
-          headers: {
-            'Authorization': `Bearer ${token}`
-          }
-        })
-      }
+      await authApi.logout()
     } catch (error) {
       console.error('Logout failed:', error)
     } finally {

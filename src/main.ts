@@ -4,7 +4,9 @@ import TDesign from 'tdesign-vue-next'
 import 'tdesign-vue-next/es/style/index.css'
 import App from './App.vue'
 import { createQmRouter, getQmMenuRoutes } from './router'
+import { getApiList } from './api/registry'
 import { createMemoryHistory, createWebHashHistory, type Router } from 'vue-router'
+import i18n, { setLanguage } from './locales'
 
 type QmContext = {
   accessToken?: string
@@ -22,29 +24,43 @@ type QmProps = QmContext & {
   onChildReady?: (api: QmChildApi) => void
   onLogout?: () => void
   onNotify?: (message: string, level?: string, title?: string) => void
+  onGlobalStateChange?: (
+    callback: (state: { locale?: string }, prevState: { locale?: string }) => void,
+    fireImmediately?: boolean
+  ) => void
+  offGlobalStateChange?: () => void
 }
 
 type QmChildApi = {
   getMenu: () => unknown[]
   getCurrentRoute: () => string
   navigate: (path: string) => void
+  getApis: () => Array<{
+    code: string
+    name: string
+    route: string
+    method: 'GET' | 'POST' | 'PUT' | 'DELETE'
+    description?: string
+    module?: string
+  }>
 }
 
 let app: VueApp | null = null
 let router: Router | null = null
 let microHashChangeHandler: (() => void) | null = null
 let removeRouterAfterEach: (() => void) | null = null
+let offGlobalStateChangeHandler: (() => void) | null = null
 let currentProps: QmProps = {}
 
 const normalizeRoutePath = (path?: string): string => {
-  if (!path) return '/quality/report'
+  if (!path) return '/quality/qmshome'
   return path.startsWith('/') ? path : `/${path}`
 }
 
 const getPathFromHostHash = (): string => {
   const hash = window.location.hash || ''
   const qmPrefix = '#/qm'
-  if (!hash.startsWith(qmPrefix)) return '/quality/report'
+  if (!hash.startsWith(qmPrefix)) return '/quality/qmshome'
   return normalizeRoutePath(hash.slice(qmPrefix.length))
 }
 
@@ -52,12 +68,15 @@ const applyContext = (props: QmProps = {}) => {
   if (typeof props.accessToken === 'string' && props.accessToken) {
     localStorage.setItem('accessToken', props.accessToken)
   }
+  if (typeof props.locale === 'string' && props.locale) {
+    setLanguage(props.locale)
+  }
 
   window.dispatchEvent(new CustomEvent('qm:init', {
     detail: {
       accessToken: props.accessToken,
       user: props.user,
-      locale: props.locale,
+      locale: props.locale || i18n.global.locale.value,
       theme: props.theme,
     },
   }))
@@ -67,20 +86,21 @@ const bindBridge = (props: QmProps = {}) => {
   window.qmBridge = {
     navigateHome: () => props.onNavigateHome?.(),
     navigate: (path: string) => props.onNavigate?.(path),
-    getCurrentRoute: () => router?.currentRoute.value.fullPath || '/quality/report',
+    getCurrentRoute: () => router?.currentRoute.value.fullPath || '/quality/qmshome',
     logout: () => props.onLogout?.(),
-    notify: (message: string, level: string = 'info', title = '业务消息') =>
+    notify: (message: string, level: string = 'info', title = String(i18n.global.t('app.notifyTitle'))) =>
       props.onNotify?.(message, level, title),
   }
 }
 
 const createChildApi = (): QmChildApi => ({
   getMenu: () => getQmMenuRoutes(),
-  getCurrentRoute: () => router?.currentRoute.value.fullPath || '/quality/report',
+  getCurrentRoute: () => router?.currentRoute.value.fullPath || '/quality/qmshome',
   navigate: (path: string) => {
     const nextPath = normalizeRoutePath(path)
     void router?.replace(nextPath)
   },
+  getApis: () => getApiList()
 })
 
 const render = async (props: QmProps = {}, isMicro = false) => {
@@ -104,6 +124,7 @@ const render = async (props: QmProps = {}, isMicro = false) => {
   app = createApp(App)
   app.use(pinia)
   app.use(router)
+  app.use(i18n)
   app.use(TDesign)
   app.mount(container)
 
@@ -140,6 +161,17 @@ const render = async (props: QmProps = {}, isMicro = false) => {
   }
 
   if (isMicro) {
+    if (typeof props.onGlobalStateChange === 'function') {
+      props.onGlobalStateChange((state) => {
+        if (state?.locale) {
+          setLanguage(state.locale)
+        }
+      }, true)
+      offGlobalStateChangeHandler = () => {
+        props.offGlobalStateChange?.()
+      }
+    }
+
     const childApi = createChildApi()
     props.onChildReady?.(childApi)
     props.onMenuUpdate?.(childApi.getMenu())
@@ -171,6 +203,10 @@ export async function unmount() {
   if (removeRouterAfterEach) {
     removeRouterAfterEach()
     removeRouterAfterEach = null
+  }
+  if (offGlobalStateChangeHandler) {
+    offGlobalStateChangeHandler()
+    offGlobalStateChangeHandler = null
   }
   app.unmount()
   app = null

@@ -1,5 +1,5 @@
 <template>
-  <t-config-provider :global-config="{ locale: zhCN }">
+  <t-config-provider :global-config="{ locale: tdLocale }">
     <div class="qm-app">
       <router-view v-slot="{ Component, route }">
         <keep-alive :include="keepAliveRouteNames">
@@ -17,15 +17,20 @@
 import { computed } from 'vue'
 import { useRouter } from 'vue-router'
 import zhCN from 'tdesign-vue-next/es/locale/zh_CN'
+import enUS from 'tdesign-vue-next/es/locale/en_US'
+import { useI18n } from 'vue-i18n'
 
 const router = useRouter()
+const { locale } = useI18n()
 
-const keepAliveRouteNames = computed(() =>
-  router
-    .getRoutes()
-    .filter(route => route.meta?.isKeepAlive && typeof route.name === 'string')
-    .map(route => String(route.name)),
-)
+const keepAliveRouteNames = computed(() => {
+  const routes = router.getRoutes()
+  return routes
+    .filter(route => route.meta?.isKeepAlive && route.name)
+    .map(route => String(route.name))
+})
+
+const tdLocale = computed(() => (locale.value === 'en-US' ? enUS : zhCN))
 </script>
 
 <style>

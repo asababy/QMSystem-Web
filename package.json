@@ -4,8 +4,8 @@
   "type": "module",
   "scripts": {
     "dev": "vite",
-    "build": "vite build",
-    "build:only": "vite build",
+    "build": "node ./scripts/prebuild-clean.mjs && vite build",
+    "build:only": "node ./scripts/prebuild-clean.mjs && vite build",
     "preview": "vite preview"
   },
   "dependencies": {
@@ -13,6 +13,7 @@
     "pinia": "^2.1.0",
     "tdesign-vue-next": "^1.9.0",
     "vue": "^3.4.0",
+    "vue-i18n": "^9.14.5",
     "vue-router": "^4.2.0"
   },
   "devDependencies": {

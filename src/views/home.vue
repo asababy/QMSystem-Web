@@ -11,8 +11,8 @@
                 <t-icon name="dashboard" size="24" />
               </div>
               <div class="logo-text">
-                <h1 class="portal-title">质量管理门户</h1>
-                <p class="portal-subtitle">Quality Management Portal</p>
+                <h1 class="portal-title">{{ t('home.portalTitle') }}</h1>
+                <p class="portal-subtitle">{{ t('home.portalSubtitle') }}</p>
               </div>
             </div>
           </div>
@@ -28,10 +28,12 @@
                   <t-icon name="chevron-down" size="16" />
                 </t-button>
                 <t-dropdown-menu>
-                  <t-dropdown-item @click="handleProfile"><t-icon name="user-circle" /> 个人资料</t-dropdown-item>
-                  <t-dropdown-item @click="handleSettings"><t-icon name="setting" /> 系统设置</t-dropdown-item>
+                  <t-dropdown-item @click="handleProfile"><t-icon name="user-circle" /> {{ t('home.profile') }}</t-dropdown-item>
+                  <t-dropdown-item @click="handleSettings"><t-icon name="setting" /> {{ t('home.settings') }}</t-dropdown-item>
+                  <t-dropdown-item @click="handleLanguageSwitch('zh-CN')"><t-icon name="translate-1" /> {{ t('common.chinese') }}</t-dropdown-item>
+                  <t-dropdown-item @click="handleLanguageSwitch('en-US')"><t-icon name="translate-1" /> {{ t('common.english') }}</t-dropdown-item>
                   <t-dropdown-item divider />
-                  <t-dropdown-item @click="handleLogout"><t-icon name="logout" /> 退出登录</t-dropdown-item>
+                  <t-dropdown-item @click="handleLogout"><t-icon name="logout" /> {{ t('home.logout') }}</t-dropdown-item>
                 </t-dropdown-menu>
               </t-dropdown>
             </div>
@@ -43,8 +45,8 @@
         <!-- 快速导航卡片 -->
         <section class="quick-nav-section">
           <div class="section-header">
-            <h2 class="section-title">快速导航</h2>
-            <p class="section-subtitle">Quick Navigation</p>
+            <h2 class="section-title">{{ t('home.quickNav') }}</h2>
+            <p class="section-subtitle">{{ t('home.quickNavSub') }}</p>
           </div>
           
           <div class="nav-grid">
@@ -78,8 +80,8 @@
 
         <section class="tabs-section">
           <div class="section-header">
-            <h2 class="section-title">门户导航</h2>
-            <p class="section-subtitle">Portal Navigation</p>
+            <h2 class="section-title">{{ t('home.portalNav') }}</h2>
+            <p class="section-subtitle">{{ t('home.portalNavSub') }}</p>
           </div>
 
           <GlassCard class="portal-nav-card" :padding="24">
@@ -121,9 +123,9 @@
           <section class="status-section">
             <GlassCard class="status-card">
               <div class="status-header">
-                <h3 class="status-title">系统状态</h3>
-                <div class="status-indicator online">
-                  <span class="status-dot"></span>运行正常
+                <h3 class="status-title">{{ t('home.systemStatus') }}</h3>
+                <div :class="['status-indicator', isOnline ? 'online' : 'offline']">
+                  <span class="status-dot"></span>{{ isOnline ? t('home.statusOnline') : t('home.statusOffline') }}
                 </div>
               </div>
               <div class="status-grid">
@@ -143,9 +145,9 @@
           <section class="activity-section">
             <GlassCard class="activity-card">
               <div class="activity-header">
-                <h3 class="activity-title">最近活动</h3>
+                <h3 class="activity-title">{{ t('home.recentActivity') }}</h3>
                 <t-button variant="text" size="small" @click="viewAllActivities">
-                  查看全部 <t-icon name="chevron-right" size="16" />
+                  {{ t('home.viewAll') }} <t-icon name="chevron-right" size="16" />
                 </t-button>
               </div>
               <div class="activity-list">
@@ -164,41 +166,140 @@
         </div>
       </main>
     </div>
+
+    <!-- 用户登录活动抽屉 -->
+    <t-drawer
+      v-model:visible="activityDrawerVisible"
+      :header="t('home.userActivityTitle') || '用户登录记录'"
+      :footer="false"
+      size="400px"
+      :close-on-overlay-click="true"
+      @close="stopActivitiesAutoRefresh"
+    >
+      <div class="activity-drawer-content">
+        <!-- 刷新按钮 -->
+        <div class="drawer-toolbar">
+          <t-button 
+            size="small" 
+            variant="outline"
+            :loading="isRefreshingActivities"
+            @click="refreshActivities"
+          >
+            <t-icon name="refresh" :class="{ 'spin-animation': isRefreshingActivities }" />
+            {{ isRefreshingActivities ? (t('home.refreshing') || '刷新中...') : (t('home.manualRefresh') || '手动刷新') }}
+          </t-button>
+          <span class="auto-refresh-hint">{{ t('home.autoRefreshHint') || '每60秒自动刷新' }}</span>
+        </div>
+
+        <!-- 用户列表 -->
+        <div class="user-activity-list">
+          <div 
+            v-for="user in userActivities" 
+            :key="user.id"
+            class="user-activity-item"
+          >
+            <div class="user-avatar-wrapper">
+              <t-avatar size="40" :image="user.avatar">
+                {{ user.realName?.charAt(0) || user.username.charAt(0) }}
+              </t-avatar>
+              <div class="online-status" :class="{ online: user.isOnline }"></div>
+            </div>
+            <div class="user-info">
+              <div class="user-name-row">
+                <span class="user-real-name">{{ user.realName }}</span>
+                <span class="user-username">({{ user.username }})</span>
+              </div>
+              <div class="user-meta">
+                <span class="login-time" :title="new Date(user.lastLoginTime).toLocaleString()">
+                  {{ formatTime(user.lastLoginTime) }}
+                </span>
+                <span v-if="user.ip" class="user-ip">IP: {{ user.ip }}</span>
+              </div>
+            </div>
+            <div class="user-status-badge" :class="{ online: user.isOnline }">
+              {{ user.isOnline ? (t('home.online') || '在线') : (t('home.offline') || '离线') }}
+            </div>
+          </div>
+        </div>
+
+        <!-- 空状态 -->
+        <div v-if="userActivities.length === 0 && !isRefreshingActivities" class="empty-state">
+          <t-icon name="user-group" size="48" color="var(--td-gray-color-4)" />
+          <p>{{ t('home.noActivityData') || '暂无用户登录数据' }}</p>
+        </div>
+      </div>
+    </t-drawer>
   </div>
 </template>
 
 <script setup lang="ts">
 import { ref, computed, onMounted, onUnmounted } from 'vue'
 import { useRouter } from 'vue-router'
+import { useI18n } from 'vue-i18n'
 import GlassBackgroundLayer from '@/components/GlassBackgroundLayer.vue'
 import GlassCard from '@/components/GlassCard.vue'
 import qmsMenu from '@/router/qms_menu.json'
+import { setLanguage } from '@/locales'
 
 const router = useRouter()
+const { t } = useI18n()
 
 // 用户信息
 const userName = ref('')
 const userAvatar = ref('')
 
-// 导航项数据
-const navigationItems = ref([
+// WebSocket 系统状态
+const isOnline = ref(false)
+const lastUpdated = ref('')
+const socket = ref<WebSocket | null>(null)
+const serviceHealthStatuses = ref<Record<string, { status: string; value: string; message: string }>>({
+  API: { status: 'offline', value: '检查中', message: '等待检查' },
+  Database: { status: 'offline', value: '检查中', message: '等待检查' },
+  Cache: { status: 'offline', value: '检查中', message: '等待检查' },
+  FileStorage: { status: 'offline', value: '检查中', message: '等待检查' }
+})
+
+const initWebSocket = () => {
+  const wsUri = `${window.location.protocol === 'https:' ? 'wss:' : 'ws:'}//${window.location.host}/ws`
+  socket.value = new WebSocket(wsUri)
+  socket.value.onopen = () => { isOnline.value = true }
+  socket.value.onclose = () => { isOnline.value = false; setTimeout(initWebSocket, 5000) }
+  socket.value.onmessage = (e: MessageEvent) => {
+    const msg = JSON.parse(e.data)
+    if (msg.time) lastUpdated.value = msg.time
+    
+    // 处理系统健康状态
+    if (msg.type === 'systemHealth' && msg.data) {
+      Object.keys(msg.data).forEach(key => {
+        const service = msg.data[key]
+        serviceHealthStatuses.value[key] = {
+          status: service.status,
+          value: service.value,
+          message: service.message
+        }
+      })
+    }
+  }
+}
+
+const navigationItems = computed(() => ([
   {
     id: 1,
-    title: '质量报告',
-    description: '查看和分析质量检测报告',
+    title: t('home.nav.reportTitle'),
+    description: t('home.nav.reportDesc'),
     icon: 'chart-line',
     path: '/quality/report',
     size: 'large',
     iconGradient: 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)',
     stats: [
-      { label: '今日报告', value: '12' },
-      { label: '待处理', value: '3' }
+      { label: t('home.nav.todayReports'), value: '12' },
+      { label: t('home.nav.pending'), value: '3' }
     ]
   },
   {
     id: 2,
-    title: '检测管理',
-    description: '管理质量检测任务和流程',
+    title: t('home.nav.inspectionTitle'),
+    description: t('home.nav.inspectionDesc'),
     icon: 'search',
     path: '/quality/inspection',
     size: 'normal',
@@ -206,8 +307,8 @@ const navigationItems = ref([
   },
   {
     id: 3,
-    title: '数据分析',
-    description: '质量数据统计和趋势分析',
+    title: t('home.nav.analyticsTitle'),
+    description: t('home.nav.analyticsDesc'),
     icon: 'pie-chart',
     path: '/quality/analytics',
     size: 'normal',
@@ -215,8 +316,8 @@ const navigationItems = ref([
   },
   {
     id: 4,
-    title: '标准管理',
-    description: '质量标准和规范管理',
+    title: t('home.nav.standardsTitle'),
+    description: t('home.nav.standardsDesc'),
     icon: 'book',
     path: '/quality/standards',
     size: 'normal',
@@ -224,8 +325,8 @@ const navigationItems = ref([
   },
   {
     id: 5,
-    title: '设备管理',
-    description: '检测设备状态和维护管理',
+    title: t('home.nav.equipmentTitle'),
+    description: t('home.nav.equipmentDesc'),
     icon: 'setting',
     path: '/quality/equipment',
     size: 'normal',
@@ -233,29 +334,29 @@ const navigationItems = ref([
   },
   {
     id: 6,
-    title: '用户管理',
-    description: '系统用户权限和角色管理',
+    title: t('home.nav.usersTitle'),
+    description: t('home.nav.usersDesc'),
     icon: 'user',
     path: '/quality/users',
     size: 'normal',
     iconGradient: 'linear-gradient(135deg, #30cfd0 0%, #330867 100%)'
   }
-])
+]))
 
 // 系统状态数据
-const systemStatus = ref([
-  { name: '数据库', value: '正常', icon: 'database', status: 'online' },
-  { name: 'API 服务', value: '正常', icon: 'server', status: 'online' },
-  { name: '文件存储', value: '99.2%', icon: 'storage', status: 'warning' },
-  { name: '缓存服务', value: '正常', icon: 'cloud', status: 'online' }
-])
+const systemStatus = computed(() => ([
+  { name: t('home.status.api'), value: serviceHealthStatuses.value.API.value, icon: 'server', status: serviceHealthStatuses.value.API.status },
+  { name: t('home.status.db'), value: serviceHealthStatuses.value.Database.value, icon: 'database', status: serviceHealthStatuses.value.Database.status },
+  { name: t('home.status.cache'), value: serviceHealthStatuses.value.Cache.value, icon: 'cloud', status: serviceHealthStatuses.value.Cache.status },
+  { name: t('home.status.fileStorage'), value: serviceHealthStatuses.value.FileStorage.value, icon: 'storage', status: serviceHealthStatuses.value.FileStorage.status }
+]))
 
 // 最近活动数据
-const recentActivities = ref([
-  { id: 1, text: '用户 张三 完成了产品质量检测 #1234', time: '2分钟前', icon: 'check-circle', color: 'linear-gradient(135deg, #10b981 0%, #059669 100%)' },
-  { id: 2, text: '系统自动备份完成', time: '15分钟前', icon: 'cloud-upload', color: 'linear-gradient(135deg, #3b82f6 0%, #1d4ed8 100%)' },
-  { id: 3, text: '质量标准文档已更新', time: '2小时前', icon: 'document', color: 'linear-gradient(135deg, #f59e0b 0%, #d97706 100%)' }
-])
+const recentActivities = computed(() => ([
+  { id: 1, text: t('home.activity.a1'), time: t('home.activity.t1'), icon: 'check-circle', color: 'linear-gradient(135deg, #10b981 0%, #059669 100%)' },
+  { id: 2, text: t('home.activity.a2'), time: t('home.activity.t2'), icon: 'cloud-upload', color: 'linear-gradient(135deg, #3b82f6 0%, #1d4ed8 100%)' },
+  { id: 3, text: t('home.activity.a3'), time: t('home.activity.t3'), icon: 'document', color: 'linear-gradient(135deg, #f59e0b 0%, #d97706 100%)' }
+]))
 
 // --- 核心逻辑：动态菜单分组 ---
 const activeGroup = ref('')
@@ -291,7 +392,7 @@ const menuGroups = computed(() => {
         
         groupsMap[gName].items.push({
           title: route.meta.title || route.name,
-          description: `${route.meta.title || ''} 管理模块`,
+          description: `${route.meta.title || ''} ${t('home.groupDescSuffix')}`,
           icon: route.meta.iconClass?.replace('bi bi-', '') || 'view-module',
           path: fullPath,
           iconGradient: groupsMap[gName].iconGradient
@@ -321,11 +422,90 @@ const switchGroup = (name: string) => {
 const navigateTo = (path: string) => router.push(path)
 const handleProfile = () => router.push('/profile')
 const handleSettings = () => router.push('/settings')
+const handleLanguageSwitch = (lang: string) => {
+  setLanguage(lang)
+}
 const handleLogout = () => {
   localStorage.removeItem('accessToken')
   router.push('/login')
 }
-const viewAllActivities = () => router.push('/activities')
+// 用户登录活动管理
+const activityDrawerVisible = ref(false)
+const userActivities = ref<Array<{
+  id: string
+  username: string
+  realName: string
+  avatar?: string
+  lastLoginTime: string
+  isOnline: boolean
+  ip?: string
+}>>([])
+const isRefreshingActivities = ref(false)
+let activitiesRefreshTimer: number | null = null
+
+// 查看全部活动 - 显示抽屉
+const viewAllActivities = () => {
+  activityDrawerVisible.value = true
+  refreshActivities()
+}
+
+// 刷新用户活动数据
+const refreshActivities = async () => {
+  if (isRefreshingActivities.value) return
+  isRefreshingActivities.value = true
+
+  try {
+    // 模拟从 WebSocket 或 API 获取数据
+    // 实际项目中应该从 WebSocket 消息或调用 API 获取
+    const mockData = [
+      { id: '1', username: 'admin', realName: '管理员', lastLoginTime: new Date().toISOString(), isOnline: true, ip: '192.168.1.100' },
+      { id: '2', username: 'zhangsan', realName: '张三', lastLoginTime: new Date(Date.now() - 5 * 60 * 1000).toISOString(), isOnline: true, ip: '192.168.1.101' },
+      { id: '3', username: 'lisi', realName: '李四', lastLoginTime: new Date(Date.now() - 30 * 60 * 1000).toISOString(), isOnline: false, ip: '192.168.1.102' },
+      { id: '4', username: 'wangwu', realName: '王五', lastLoginTime: new Date(Date.now() - 2 * 60 * 60 * 1000).toISOString(), isOnline: false, ip: '192.168.1.103' },
+      { id: '5', username: 'zhaoliu', realName: '赵六', lastLoginTime: new Date(Date.now() - 24 * 60 * 60 * 1000).toISOString(), isOnline: false, ip: '192.168.1.104' }
+    ]
+    
+    // 按登录时间倒序排列
+    userActivities.value = mockData.sort((a, b) => 
+      new Date(b.lastLoginTime).getTime() - new Date(a.lastLoginTime).getTime()
+    )
+  } finally {
+    // 延迟结束刷新动画，让用户感知到
+    setTimeout(() => {
+      isRefreshingActivities.value = false
+    }, 500)
+  }
+}
+
+// 启动自动刷新
+const startActivitiesAutoRefresh = () => {
+  stopActivitiesAutoRefresh()
+  activitiesRefreshTimer = window.setInterval(() => {
+    if (activityDrawerVisible.value) {
+      refreshActivities()
+    }
+  }, 60000) // 60秒刷新一次
+}
+
+// 停止自动刷新
+const stopActivitiesAutoRefresh = () => {
+  if (activitiesRefreshTimer) {
+    clearInterval(activitiesRefreshTimer)
+    activitiesRefreshTimer = null
+  }
+}
+
+// 格式化时间显示
+const formatTime = (timeStr: string) => {
+  const date = new Date(timeStr)
+  const now = new Date()
+  const diff = now.getTime() - date.getTime()
+  
+  if (diff < 60000) return '刚刚'
+  if (diff < 3600000) return `${Math.floor(diff / 60000)}分钟前`
+  if (diff < 86400000) return `${Math.floor(diff / 3600000)}小时前`
+  return `${Math.floor(diff / 86400000)}天前`
+}
 
 const applyUser = (user: any) => {
   if (!user || typeof user !== 'object') return
@@ -388,6 +568,8 @@ const handleQmInit = (event: Event) => {
 onMounted(() => {
   window.addEventListener('qm:init', handleQmInit as EventListener)
   syncUser()
+  initWebSocket()
+  startActivitiesAutoRefresh()
   
   // 默认选中第一个 Tab
   if (menuGroups.value.length > 0) {
@@ -397,6 +579,8 @@ onMounted(() => {
 
 onUnmounted(() => {
   window.removeEventListener('qm:init', handleQmInit as EventListener)
+  if (socket.value) socket.value.close()
+  stopActivitiesAutoRefresh()
 })
 </script>
 
@@ -649,6 +833,10 @@ onUnmounted(() => {
 .status-icon { width: 40px; height: 40px; border-radius: 10px; display: flex; align-items: center; justify-content: center; color: white; }
 .status-icon.online { background: linear-gradient(135deg, #10b981 0%, #059669 100%); }
 .status-icon.warning { background: linear-gradient(135deg, #f59e0b 0%, #d97706 100%); }
+.status-icon.offline { background: linear-gradient(135deg, #ef4444 0%, #dc2626 100%); }
+
+.status-indicator.offline { color: #ef4444; }
+.status-indicator.offline .status-dot { background: #ef4444; }
 
 .activity-list { display: flex; flex-direction: column; gap: 12px; margin-top: 16px; }
 .activity-item {
@@ -660,6 +848,148 @@ onUnmounted(() => {
 .fade-slide-enter-active, .fade-slide-leave-active { transition: all 0.3s ease; }
 .fade-slide-enter-from { opacity: 0; transform: translateY(10px); }
 .fade-slide-leave-to { opacity: 0; transform: translateY(-10px); }
+
+/* 用户活动抽屉样式 */
+.activity-drawer-content {
+  padding: 16px 0;
+}
+
+.drawer-toolbar {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 0 16px 16px;
+  border-bottom: 1px solid rgba(0, 0, 0, 0.06);
+  margin-bottom: 16px;
+}
+
+.auto-refresh-hint {
+  font-size: 12px;
+  color: rgba(29, 27, 75, 0.5);
+}
+
+.spin-animation {
+  animation: spin 1s linear infinite;
+}
+
+@keyframes spin {
+  from { transform: rotate(0deg); }
+  to { transform: rotate(360deg); }
+}
+
+.user-activity-list {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  padding: 0 16px;
+}
+
+.user-activity-item {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 12px;
+  background: rgba(255, 255, 255, 0.6);
+  border-radius: 12px;
+  border: 1px solid rgba(255, 255, 255, 0.4);
+  transition: all 0.2s ease;
+}
+
+.user-activity-item:hover {
+  background: rgba(255, 255, 255, 0.8);
+  transform: translateX(4px);
+}
+
+.user-avatar-wrapper {
+  position: relative;
+  flex-shrink: 0;
+}
+
+.online-status {
+  position: absolute;
+  bottom: 2px;
+  right: 2px;
+  width: 12px;
+  height: 12px;
+  border-radius: 50%;
+  background: #9ca3af;
+  border: 2px solid white;
+  transition: background 0.3s ease;
+}
+
+.online-status.online {
+  background: #10b981;
+}
+
+.user-info {
+  flex: 1;
+  min-width: 0;
+}
+
+.user-name-row {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  margin-bottom: 4px;
+}
+
+.user-real-name {
+  font-size: 14px;
+  font-weight: 600;
+  color: #1d1b4b;
+}
+
+.user-username {
+  font-size: 12px;
+  color: rgba(29, 27, 75, 0.5);
+}
+
+.user-meta {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  font-size: 12px;
+  color: rgba(29, 27, 75, 0.5);
+}
+
+.login-time {
+  cursor: help;
+}
+
+.user-ip {
+  font-family: monospace;
+  background: rgba(29, 27, 75, 0.05);
+  padding: 2px 6px;
+  border-radius: 4px;
+}
+
+.user-status-badge {
+  flex-shrink: 0;
+  padding: 4px 10px;
+  border-radius: 20px;
+  font-size: 12px;
+  font-weight: 500;
+  background: rgba(156, 163, 175, 0.15);
+  color: #6b7280;
+}
+
+.user-status-badge.online {
+  background: rgba(16, 185, 129, 0.15);
+  color: #059669;
+}
+
+.empty-state {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  padding: 48px 16px;
+  color: rgba(29, 27, 75, 0.5);
+}
+
+.empty-state p {
+  margin-top: 12px;
+  font-size: 14px;
+}
 
 @media (max-width: 1024px) {
   .dashboard-row { grid-template-columns: 1fr; }

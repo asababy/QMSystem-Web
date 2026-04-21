@@ -9,9 +9,9 @@
             <!-- 扩展按钮列 -->
             <th v-if="props.expandable" class="jo-table-th jo-table-expand-header"></th>
             <!-- 序号列 -->
-            <th v-if="props.showIndex" class="jo-table-th jo-table-index">#</th>
+            <th v-if="props.showIndex" class="jo-table-th jo-table-index jo-table-header-cell">#</th>
             <!-- 选择列 -->
-            <th v-if="props.selectable" class="jo-table-th jo-table-check">
+            <th v-if="props.selectable" class="jo-table-th jo-table-check jo-table-header-cell">
               <t-checkbox
                 :checked="isAllSelected"
                 :indeterminate="isIndeterminate"
@@ -22,9 +22,9 @@
             <th
               v-for="(col, colIndex) in displayColumns"
               :key="col.key"
-              class="jo-table-th"
+              class="jo-table-th jo-table-header-cell"
               :class="{ 'jo-table-sortable': col.sortable !== false }"
-              :style="{ width: col.width, minWidth: col.minWidth }"
+              :style="{ width: columnWidths[col.key] || col.width, minWidth: col.minWidth }"
               @click="col.sortable !== false && toggleSort(col.key)"
               @dblclick="onHeaderDoubleClick(col, colIndex)"
             >
@@ -34,6 +34,10 @@
                   {{ sortOrder === 'asc' ? '↑' : '↓' }}
                 </span>
               </div>
+              <div
+                class="jo-table-resizer"
+                @mousedown.stop="startResize(col, $event)"
+              ></div>
             </th>
           </tr>
           <!-- 过滤行 -->
@@ -44,16 +48,15 @@
             <th
               v-for="col in displayColumns"
               :key="col.key"
-              class="jo-table-th"
-              :style="{ width: col.width, minWidth: col.minWidth }"
+              class="jo-table-th jo-table-filter-cell"
+              :style="{ width: columnWidths[col.key] || col.width, minWidth: col.minWidth }"
             >
-              <t-input
+              <input
                 v-if="col.filterable !== false"
                 v-model="filters[col.key]"
-                size="small"
-                :placeholder="col.filterPlaceholder || '搜索'"
-                clearable
-                @change="onFilterChange"
+                class="jo-table-filter-input"
+                :placeholder="col.filterPlaceholder || 'Search ' + col.key"
+                @input="onFilterChange"
               />
             </th>
           </tr>
@@ -99,6 +102,7 @@
               <td v-if="props.selectable" class="jo-table-td jo-table-check">
                 <t-checkbox
                   :checked="isRowSelected(row)"
+                  :disabled="props.disabledRow?.(row)"
                   @change="(checked: boolean) => onRowSelectChange(row, checked)"
                 />
               </td>
@@ -180,7 +184,7 @@
 </template>
 
 <script setup lang="ts">
-import { ref, computed, watch } from 'vue'
+import { ref, computed, watch, onMounted } from 'vue'
 
 // 列配置接口
 export interface JoTableColumn {
@@ -208,6 +212,7 @@ interface Props {
   maxHeight?: string
   expandable?: boolean // 是否可展开
   showIndex?: boolean // 是否显示序号列，默认true
+  disabledRow?: (row: any) => boolean // 禁用行的回调函数
 }
 
 const props = withDefaults(defineProps<Props>(), {
@@ -244,6 +249,23 @@ const columnOrder = ref<string[]>([])
 
 // 展开的行
 const expandedRows = ref<Set<string>>(new Set())
+
+// 表头高度，用于固定过滤行
+const headerHeight = ref(33) // 默认值设为 33px
+
+onMounted(() => {
+  const updateHeight = () => {
+    const headerCell = document.querySelector('.jo-table-header-cell')
+    if (headerCell) {
+      headerHeight.value = headerCell.getBoundingClientRect().height
+    }
+  }
+  
+  updateHeight()
+  // 在图片或字体加载后可能还会变化，稍微延迟再校准一次
+  setTimeout(updateHeight, 500)
+  window.addEventListener('resize', updateHeight)
+})
 
 // 列设置弹窗
 const showColumnSettings = ref(false)
@@ -441,6 +463,42 @@ function onHeaderDoubleClick(col: JoTableColumn, index: number) {
   showColumnSettings.value = true
 }
 
+// 列宽调整
+const resizingColumn = ref<JoTableColumn | null>(null)
+const startX = ref(0)
+const startWidth = ref(0)
+const columnWidths = ref<Record<string, string>>({})
+
+function startResize(col: JoTableColumn, event: MouseEvent) {
+  resizingColumn.value = col
+  startX.value = event.clientX
+  
+  // 获取当前实际宽度
+  const thElement = (event.target as HTMLElement).parentElement
+  startWidth.value = thElement ? thElement.getBoundingClientRect().width : (col.width ? parseInt(col.width) : 100)
+
+  document.addEventListener('mousemove', onResize)
+  document.addEventListener('mouseup', stopResize)
+  document.body.style.cursor = 'col-resize'
+}
+
+function onResize(event: MouseEvent) {
+  if (!resizingColumn.value) return
+
+  const diff = event.clientX - startX.value
+  const newWidth = Math.max(startWidth.value + diff, 40) // 最小宽度 40px
+
+  // 更新内部列宽状态
+  columnWidths.value[resizingColumn.value.key] = newWidth + 'px'
+}
+
+function stopResize() {
+  resizingColumn.value = null
+  document.removeEventListener('mousemove', onResize)
+  document.removeEventListener('mouseup', stopResize)
+  document.body.style.cursor = ''
+}
+
 // 切换展开状态
 function toggleExpand(row: any) {
   const key = getRowKey(row, 0)
@@ -608,38 +666,67 @@ defineExpose({
   margin-left: auto;
 }
 
-/* 过滤行 - 超紧凑细长 */
-.jo-table-filter-row th {
-  padding: 0;
-  height: 22px;
-  background: var(--jo-table-filter-bg);
-  border-bottom: 1px solid var(--jo-table-filter-border);
-  top: 28px;
+/* 列宽调整器 */
+.jo-table-header-cell {
+  position: relative;
+}
+
+.jo-table-resizer {
+  position: absolute;
+  right: 0;
+  top: 0;
+  width: 4px;
+  height: 100%;
+  cursor: col-resize;
+  background: transparent;
+  z-index: 10;
+}
+
+.jo-table-resizer:hover {
+  background: var(--jo-table-filter-input-focus-border);
+  opacity: 0.5;
+}
+
+/* 过滤行 - 仿图2原生样式 */
+.jo-table-filter-row th.jo-table-filter-cell {
+  padding: 0 !important;
+  height: 24px;
+  background: var(--jo-table-header-bg); /* 背景色与列头一致 */
+  border-bottom: 1px solid #e5e7eb;
+  border-right: 1px solid #f1f5f9;
+  position: sticky;
   z-index: 5;
 }
 
-.jo-table-filter-row :deep(.t-input) {
-  width: 100%;
-  height: 100%;
+.jo-table-filter-row th.jo-table-filter-cell {
+  top: v-bind('headerHeight + "px"'); /* 动态绑定 top 值 */
 }
 
-.jo-table-filter-row :deep(.t-input__wrap) {
-  width: 100%;
-  height: 100%;
+.jo-table-filter-row th:last-child {
+  border-right: none;
 }
 
-.jo-table-filter-row :deep(.t-input__inner) {
-  height: 100% !important;
-  min-height: 20px;
-  border-radius: 0;
+.jo-table-filter-input {
+  width: 100%;
+  height: 24px;
+  border: none;
+  outline: none;
   padding: 0 4px;
   font-size: 11px;
-  border: none;
+  color: #666;
   background: transparent;
+  display: block;
+  box-sizing: border-box;
 }
 
-.jo-table-filter-row :deep(.t-input__inner:focus) {
-  background: #fff;
+.jo-table-filter-input::placeholder {
+  color: #bbb;
+  font-style: normal;
+  text-align: left;
+}
+
+.jo-table-filter-input:focus {
+  background: #f8fafc;
   box-shadow: inset 0 0 0 1px var(--jo-table-filter-input-focus-border);
 }
 

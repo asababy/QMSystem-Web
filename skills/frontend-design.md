@@ -106,59 +106,6 @@ const reportComponentMap = computed(() => {
 - **ErrorComponent**: 显示错误信息和重试按钮
 - **超时处理**: 10秒超时机制
 
-### 4. 动态菜单配置集成
-
-#### 菜单配置结构 (qms_menu.json)
-```json
-{
-  "name": "Quality",
-  "path": "/quality",
-  "meta": {
-    "title": "质量报告",
-    "requiresAuth": true,
-    "iconClass": "bi bi-clipboard-data"
-  },
-  "children": [
-    {
-      "name": "QualityReport",
-      "path": "report",
-      "meta": {
-        "title": "COA报告",
-        "requiresAuth": true,
-        "isKeepAlive": true,
-        "order": 1,
-        "iconClass": "bi bi-file-earmark-text",
-        "elmenuitemgroup": "质量报告"
-      },
-      "component": "@/views/reports/quality-report.vue"
-    }
-  ]
-}
-```
-
-#### 自动解析功能
-- 读取 qms_menu.json 配置
-- 根据 order 字段排序Tab
-- 动态创建组件映射关系
-- 支持图标和分组显示
-
-### 5. 路由配置更新
-
-#### 新增路由
-```
-/quality/report -> Tab容器页面
-```
-
-#### 保留原路由
-```
-/quality/quality-report -> COA报告页面
-/quality/lme-report -> LME传输记录页面
-```
-
-#### 重定向配置
-```
-/quality -> /quality/report (默认重定向到Tab页面)
-```
 
 ## 📱 响应式设计
 
@@ -184,17 +131,6 @@ src/components/
 └── ErrorComponent.vue         # 错误状态组件
 ```
 
-### 页面组件
-```
-src/views/
-├── home.vue                  # 主页（玻璃拟态设计示例）
-├── reports/
-│   ├── quality-report.vue    # COA报告
-│   └── lme-report.vue       # LME传输记录
-└── quality/
-    └── report.vue           # Tab容器页面（待实现）
-```
-
 ## 🎯 实现步骤
 
 ### 第一阶段：基础组件开发
@@ -208,18 +144,6 @@ src/views/
 2. ✅ 集成导航系统
 3. ✅ 添加系统状态概览
 4. ✅ 实现报表中心Tab
-
-### 第三阶段：报表页面改造
-1. 🔄 将现有报表页面改造为玻璃拟态风格
-2. 🔄 创建统一的Tab容器页面
-3. 🔄 实现动态组件加载
-4. 🔄 更新路由配置
-
-### 第四阶段：优化和完善
-1. ⏳ 性能优化
-2. ⏳ 无障碍访问支持
-3. ⏳ 浏览器兼容性测试
-4. ⏳ 移动端体验优化
 
 ## 📋 使用指南
 
@@ -264,17 +188,10 @@ import GlassCard from '@/components/GlassCard.vue'
 </style>
 ```
 
-### 添加新的Tab页面
-1. 在 `qms_menu.json` 中添加配置
-2. 创建对应的Vue组件文件
-3. 确保组件导出正确
-4. Tab会自动生成并加载
-
 ## 🔧 技术栈
 
 - **Vue 3**: Composition API
 - **TypeScript**: 类型安全
-- **TDesign UI**: 基础组件库
 - **Vite**: 构建工具
 - **CSS3**: 玻璃拟态效果实现
 
@@ -298,7 +215,3 @@ import GlassCard from '@/components/GlassCard.vue'
 3. **柔和性**: 柔和的渐变和色彩搭配
 4. **现代感**: Material 3 + Glassmorphism 结合
 5. **响应性**: 适配不同屏幕尺寸和状态
-
----
-
-*此文档描述了QMSystem-UI中实现的玻璃拟态设计系统，为开发者提供完整的设计指南和实现参考。*

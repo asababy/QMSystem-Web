@@ -3,13 +3,11 @@
     <div class="card">
       <div class="title-row">
         <div>
-          <h1>质量报告查询</h1>
-          <div class="subtitle">按时间范围查询质量检测结果</div>
+          <h1>{{ t('qualityReport.title') }}</h1>
+          <div class="subtitle">{{ t('qualityReport.subtitle') }}</div>
         </div>
         <div class="title-actions">
-          <t-button theme="primary" size="small" variant="base" @click="goHome">
-            返回主页
-          </t-button>
+          <HomeNavButton />
           <div :class="['status-badge', hasError ? 'status-error' : 'status-ok']">
             {{ statusText }}
           </div>
@@ -22,6 +20,8 @@
           <JoSearchPanel
             ref="searchPanelRef"
             :fields="searchFields"
+            :search-text="t('common.query')"
+            :reset-text="t('common.reset')"
             v-model="searchValues"
             :collapsible="true"
             :collapsed="false"
@@ -54,7 +54,7 @@
             :disabled="!canDownload"
             @click="streamingPreview"
           >
-            预览
+            {{ t('qualityReport.preview') }}
           </t-button>
           <t-button
             theme="success"
@@ -63,7 +63,7 @@
             :disabled="!canDownload"
             @click="downloadFile('excel')"
           >
-            下载Excel
+            {{ t('qualityReport.downloadExcel') }}
           </t-button>
           <t-button
             theme="success"
@@ -72,7 +72,7 @@
             :disabled="!canDownload"
             @click="downloadFile('pdf')"
           >
-            下载PDF
+            {{ t('qualityReport.downloadPdf') }}
           </t-button>
           <t-button
             theme="warning"
@@ -81,7 +81,7 @@
             :disabled="!canDownload"
             @click="transmitToLme"
           >
-            传输LME
+            {{ t('qualityReport.transmitLme') }}
           </t-button>
           <t-button
             class="action-print"
@@ -91,21 +91,21 @@
             :disabled="!canDownload"
             @click="printReport"
           >
-            打印
+            {{ t('qualityReport.print') }}
           </t-button>
         </div>
       </div>
 
       <div class="status-bar">
         <div>{{ message }}</div>
-        <div>共 {{ rows.length }} 条记录</div>
+        <div>{{ t('common.allRecords', { count: rows.length }) }}</div>
       </div>
 
       <div v-if="lmeResponseText" class="api-result-panel">
         <div class="api-result-header">
-          <span>LME返回结果</span>
+          <span>{{ t('qualityReport.lmeResponse') }}</span>
           <t-button size="small" theme="default" variant="outline" @click="lmeResponseText = ''">
-            清空
+            {{ t('common.clear') }}
           </t-button>
         </div>
         <pre class="api-result-content">{{ lmeResponseText }}</pre>
@@ -119,11 +119,12 @@
         :selectable="true"
         v-model:selected-keys="selectedOrders"
         :filterable="true"
+        :disabled-row="disabledRow"
         max-height="520px"
         @selection-change="onTableSelectionChange"
         @sort-change="onTableSortChange"
       >
-        <template #cell-createTime="{ value }">
+        <template #cell-bizTime="{ value }">
           {{ formatDateTime(value) }}
         </template>
         <template #cell-grade="{ value }">
@@ -138,10 +139,10 @@
       <div class="details-section" v-if="selectedOrders.length > 0">
         <div class="details-header">
           <div>
-            <h3 class="details-title">选中订单明细</h3>
+            <h3 class="details-title">{{ t('qualityReport.selectedDetails') }}</h3>
             <div class="status-bar">
-              已选择 {{ selectedOrders.length }} 个订单，共计 {{ selectedOrderDetails.length }} 行
-              <span v-if="selectedOrders.length > 1 && !sameGradeValidation">（不同品位，无法合并导出）</span>
+              {{ t('qualityReport.selectedDetails') }}: {{ selectedOrders.length }} / {{ selectedOrderDetails.length }}
+              <span v-if="selectedOrders.length > 1 && !sameGradeValidation">({{ t('qualityReport.gradeMismatch') }})</span>
             </div>
             <!-- 进度条 -->
             <div v-if="loadingDetails" class="progress-container">
@@ -149,7 +150,7 @@
                 <div class="progress-fill" :style="{ width: (detailsProgress / detailsTotal) * 100 + '%' }"></div>
               </div>
               <div class="progress-text">
-                正在加载明细数据... {{ detailsProgress }}/{{ detailsTotal }} 个订单
+                {{ t('qualityReport.loadingDetails', { current: detailsProgress, total: detailsTotal }) }}
               </div>
             </div>
           </div>
@@ -161,12 +162,12 @@
             :disabled="loadingDetails"
             @click="toggleDetailsView"
           >
-            {{ loadingDetails ? '加载中' : (showDetails ? '隐藏明细' : '显示明细') }}
+            {{ loadingDetails ? t('common.loading') : (showDetails ? t('qualityReport.hideDetails') : t('qualityReport.showDetails')) }}
           </t-button>
         </div>
         
         <div class="grade-warning" v-if="selectedOrders.length > 1 && !sameGradeValidation">
-          ⚠️ 选中订单的牌号不一致，无法合并导出。请选择相同牌号的订单进行合并导出。
+          ⚠️ {{ t('qualityReport.gradeMismatch') }}
         </div>
 
         <div v-if="showDetails && selectedOrderDetails.length > 0" class="detail-table-wrapper">
@@ -185,17 +186,33 @@
       </div>
     </div>
   </div>
+
+  <!-- Toast 提示组件 -->
+  <JoToast ref="toastRef" />
+
+  <!-- Dialog 弹窗组件 -->
+  <JoDialog ref="dialogRef" />
 </template>
+
+<script lang="ts">
+export default {
+  name: 'QualityReport',
+}
+</script>
 
 <script setup lang="ts">
 import { ref, computed, onMounted } from 'vue'
-import { useRouter } from 'vue-router'
+import { useI18n } from 'vue-i18n'
 import JoTable from '@/components/basic/table/JoTable.vue'
 import JoSearchPanel from '@/components/basic/search-panel/JoSearchPanel.vue'
+import HomeNavButton from '@/components/basic/HomeNavButton.vue'
+import JoToast from '@/components/basic/toast/JoToast.vue'
+import JoDialog from '@/components/basic/dialog/JoDialog.vue'
+import { qmApi } from '@/api/modules'
 import type { JoTableColumn } from '@/components/basic/table/JoTable.vue'
 import type { SearchField } from '@/components/basic/search-panel/JoSearchPanel.vue'
 
-const router = useRouter()
+const { t, locale } = useI18n()
 const now = new Date()
 const currentYear = now.getFullYear()
 const currentMonth = now.getMonth()
@@ -214,17 +231,37 @@ const formatDate = (date: Date) => {
 
 const startDate = ref(formatDate(firstDay))
 // Search fields configuration
-const searchFields: SearchField[] = [
-  { key: 'dateRange', label: 'Business date', type: 'date-range', startPlaceholder: 'Start date', endPlaceholder: 'End date' },
-  { key: 'orderNumber', label: 'Order number', type: 'text', placeholder: 'Supports fuzzy search' },
-  { key: 'grade', label: 'Grade', type: 'text', placeholder: 'Supports fuzzy search' },
-  { key: 'lmeStatus', label: 'LME status', type: 'select', options: [
-      { label: 'All', value: '' },
-      { label: 'Transmitted', value: 'Success' },
-      { label: 'Failed', value: 'Failed' }
-    ] 
+const searchFields = computed<SearchField[]>(() => [
+  {
+    key: 'dateRange',
+    label: t('qualityReport.search.businessDate'),
+    type: 'date-range',
+    startPlaceholder: t('qualityReport.search.startDate'),
+    endPlaceholder: t('qualityReport.search.endDate')
+  },
+  {
+    key: 'orderNumber',
+    label: t('qualityReport.search.orderNumber'),
+    type: 'text',
+    placeholder: t('qualityReport.search.supportsFuzzy')
+  },
+  {
+    key: 'grade',
+    label: t('qualityReport.search.grade'),
+    type: 'text',
+    placeholder: t('qualityReport.search.supportsFuzzy')
+  },
+  {
+    key: 'lmeStatus',
+    label: t('qualityReport.search.lmeStatus'),
+    type: 'select',
+    options: [
+      { label: t('qualityReport.search.all'), value: '' },
+      { label: t('qualityReport.search.transmitted'), value: 'Success' },
+      { label: t('qualityReport.search.failed'), value: 'Failed' }
+    ]
   }
-]
+])
 
 // Search values - initialize with default date values
 const searchValues = ref<Record<string, any>>({
@@ -239,9 +276,9 @@ const lmeStatus = ref('')
 const rows = ref<any[]>([])
 const loading = ref(false)
 const isFiltering = ref(false)
-const statusText = ref('就绪')
+const statusText = ref(String(t('common.ready')))
 const hasError = ref(false)
-const message = ref(`默认查询 ${startDate.value} ~ ${endDateForDisplay.value} 数据`)
+const message = ref(String(t('qualityReport.defaultQuery', { start: startDate.value, end: endDateForDisplay.value })))
 const selectedOrders = ref<string[]>([])
 const allSelected = ref(false)
 const activeDateRange = ref('')
@@ -254,42 +291,60 @@ const lmeResponseText = ref('')
 // 搜索面板引用
 const searchPanelRef = ref<InstanceType<typeof JoSearchPanel>>()
 
+// Toast 提示引用
+const toastRef = ref<InstanceType<typeof JoToast>>()
+
+// Dialog 弹窗引用
+const dialogRef = ref<InstanceType<typeof JoDialog>>()
+
+// 表格行禁用函数 - 传输成功的订单禁用选择
+const disabledRow = (row: any) => {
+  return row.lmeStatus === 'Success'
+}
+
 // 日期快捷键
-const dateShortcuts = ref(['本月', '上月', '本季', '上季', '今日', '昨日'])
+const dateShortcuts = computed(() => [
+  t('qualityReport.shortcuts.currentMonth'),
+  t('qualityReport.shortcuts.lastMonth'),
+  t('qualityReport.shortcuts.currentQuarter'),
+  t('qualityReport.shortcuts.lastQuarter'),
+  t('qualityReport.shortcuts.today'),
+  t('qualityReport.shortcuts.yesterday')
+])
 
 // 表格列配置
-const tableColumns: JoTableColumn[] = [
-  { key: 'orderNumber', title: '单号', sortable: true, filterable: true, filterPlaceholder: '搜索单号' },
-  { key: 'grade', title: '牌号', sortable: true, filterable: true, filterPlaceholder: '搜索牌号' },
-  { key: 'totalPackages', title: '总捆数', sortable: true, filterable: true, filterPlaceholder: '搜索捆数' },
-  { key: 'totalWeight', title: '总重量', sortable: true, filterable: true, filterPlaceholder: '搜索重量' },
-  { key: 'createTime', title: '创建时间', sortable: true, filterable: true, filterPlaceholder: '搜索时间', formatter: (val) => formatDateTime(val) },
-  { key: 'lmeStatus', title: 'LME状态', sortable: true, filterable: true, filterPlaceholder: '搜索状态' }
-]
+const tableColumns = computed<JoTableColumn[]>(() => [
+  { key: 'orderNumber', title: t('qualityReport.table.orderNumber'), sortable: true, filterable: true, filterPlaceholder: t('qualityReport.table.searchOrderNumber') },
+  { key: 'grade', title: t('qualityReport.table.grade'), sortable: true, filterable: true, filterPlaceholder: t('qualityReport.table.searchGrade') },
+  { key: 'totalPackages', title: t('qualityReport.table.totalPackages'), sortable: true, filterable: true, filterPlaceholder: t('qualityReport.table.searchTotalPackages') },
+  { key: 'totalWeight', title: t('qualityReport.table.totalWeight'), sortable: true, filterable: true, filterPlaceholder: t('qualityReport.table.searchTotalWeight') },
+  { key: 'bizTime', title: t('qualityReport.table.createTime'), sortable: true, filterable: true, filterPlaceholder: t('qualityReport.table.searchCreateTime'), formatter: (val) => formatDateTime(val) },
+  { key: 'lmeStatus', title: t('qualityReport.table.lmeStatus'), sortable: true, filterable: true, filterPlaceholder: t('qualityReport.table.searchStatus') }
+])
 
 // 明细表格列配置
-const detailTableColumns: JoTableColumn[] = [
-  { key: 'orderNumber', title: '单号', sortable: true, filterable: true, filterPlaceholder: '搜索单号' },
-  { key: 'barcode', title: '条码', sortable: true, filterable: true, filterPlaceholder: '搜索条码' },
-  { key: 'batchCode', title: '批次号', sortable: true, filterable: true, filterPlaceholder: '搜索批次' },
-  { key: 'baleNumber', title: '捆号', sortable: true, filterable: true, filterPlaceholder: '搜索捆号' },
-  { key: 'weight', title: '重量', sortable: true, filterable: true, filterPlaceholder: '搜索重量' },
-  { key: 'qmGrade', title: '品位', sortable: true, filterable: true, filterPlaceholder: '搜索品位' },
-  { key: 'qmBatchCode', title: '批号', sortable: true, filterable: true, filterPlaceholder: '搜索批号' },
-  { key: 'si', title: 'Si', sortable: true, filterable: true, filterPlaceholder: '搜索Si' },
-  { key: 'fe', title: 'Fe', sortable: true, filterable: true, filterPlaceholder: '搜索Fe' },
-  { key: 'zn', title: 'Zn', sortable: true, filterable: true, filterPlaceholder: '搜索Zn' },
-  { key: 'ga', title: 'Ga', sortable: true, filterable: true, filterPlaceholder: '搜索Ga' },
-  { key: 'v', title: 'V', sortable: true, filterable: true, filterPlaceholder: '搜索V' },
-  { key: 'cr', title: 'Cr', sortable: true, filterable: true, filterPlaceholder: '搜索Cr' },
-  { key: 'cu', title: 'Cu', sortable: true, filterable: true, filterPlaceholder: '搜索Cu' },
-  { key: 'mg', title: 'Mg', sortable: true, filterable: true, filterPlaceholder: '搜索Mg' },
-  { key: 'mn', title: 'Mn', sortable: true, filterable: true, filterPlaceholder: '搜索Mn' },
-  { key: 'ni', title: 'Ni', sortable: true, filterable: true, filterPlaceholder: '搜索Ni' },
-  { key: 'ti', title: 'Ti', sortable: true, filterable: true, filterPlaceholder: '搜索Ti' },
-  { key: 'al', title: 'Al', sortable: true, filterable: true, filterPlaceholder: '搜索Al' },
-  { key: 'otherS_total', title: 'OtherS_total', sortable: true, filterable: true, filterPlaceholder: '搜索OtherS' }
-]
+const detailTableColumns = computed<JoTableColumn[]>(() => [
+  { key: 'orderNumber', title: t('qualityReport.table.orderNumber'), sortable: true, filterable: true, filterPlaceholder: t('qualityReport.table.searchOrderNumber') },
+  { key: 'barcode', title: t('qualityReport.table.barcode'), sortable: true, filterable: true, filterPlaceholder: t('qualityReport.table.searchBarcode') },
+  { key: 'batchCode', title: t('qualityReport.table.batchCode'), sortable: true, filterable: true, filterPlaceholder: t('qualityReport.table.searchBatchCode') },
+  { key: 'baleNumber', title: t('qualityReport.table.baleNumber'), sortable: true, filterable: true, filterPlaceholder: t('qualityReport.table.searchBaleNumber') },
+  { key: 'weight', title: t('qualityReport.table.weight'), sortable: true, filterable: true, filterPlaceholder: t('qualityReport.table.searchWeight') },
+  { key: 'qmGrade', title: t('qualityReport.table.qmGrade'), sortable: true, filterable: true, filterPlaceholder: t('qualityReport.table.searchQmGrade') },
+  { key: 'qmBatchCode', title: t('qualityReport.table.qmBatchCode'), sortable: true, filterable: true, filterPlaceholder: t('qualityReport.table.searchQmBatchCode') },
+  { key: 'si', title: 'Si', sortable: true, filterable: true, filterPlaceholder: t('qualityReport.table.searchElement', { name: 'Si' }) },
+  { key: 'fe', title: 'Fe', sortable: true, filterable: true, filterPlaceholder: t('qualityReport.table.searchElement', { name: 'Fe' }) },
+  { key: 'zn', title: 'Zn', sortable: true, filterable: true, filterPlaceholder: t('qualityReport.table.searchElement', { name: 'Zn' }) },
+  { key: 'ga', title: 'Ga', sortable: true, filterable: true, filterPlaceholder: t('qualityReport.table.searchElement', { name: 'Ga' }) },
+  { key: 'v', title: 'V', sortable: true, filterable: true, filterPlaceholder: t('qualityReport.table.searchElement', { name: 'V' }) },
+  { key: 'cr', title: 'Cr', sortable: true, filterable: true, filterPlaceholder: t('qualityReport.table.searchElement', { name: 'Cr' }) },
+  { key: 'cu', title: 'Cu', sortable: true, filterable: true, filterPlaceholder: t('qualityReport.table.searchElement', { name: 'Cu' }) },
+  { key: 'mg', title: 'Mg', sortable: true, filterable: true, filterPlaceholder: t('qualityReport.table.searchElement', { name: 'Mg' }) },
+  { key: 'mn', title: 'Mn', sortable: true, filterable: true, filterPlaceholder: t('qualityReport.table.searchElement', { name: 'Mn' }) },
+  { key: 'ni', title: 'Ni', sortable: true, filterable: true, filterPlaceholder: t('qualityReport.table.searchElement', { name: 'Ni' }) },
+  { key: 'ti', title: 'Ti', sortable: true, filterable: true, filterPlaceholder: t('qualityReport.table.searchElement', { name: 'Ti' }) },
+  { key: 'al', title: 'Al', sortable: true, filterable: true, filterPlaceholder: t('qualityReport.table.searchElement', { name: 'Al' }) },
+  { key: 'otherS_total', title: t('qualityReport.table.otherS'), sortable: true, filterable: true, filterPlaceholder: t('qualityReport.table.searchOtherS') }
+])
 
 // 明细表格引用
 const detailTableRef = ref<InstanceType<typeof JoTable>>()
@@ -387,8 +442,8 @@ function handleReset() {
   tableRef.value?.reset()
   
   rows.value = []
-  statusText.value = '就绪'
-  message.value = '已重置查询条件'
+  statusText.value = String(t('common.ready'))
+  message.value = String(t('qualityReport.resetDone'))
 }
 
 // 处理日期快捷键点击
@@ -400,29 +455,29 @@ function handleDateShortcut(shortcut: string) {
   let firstDay: Date, lastDay: Date
   
   switch (shortcut) {
-    case '今日':
+    case t('qualityReport.shortcuts.today'):
       firstDay = new Date(now)
       lastDay = new Date(now)
       break
-    case '昨日':
+    case t('qualityReport.shortcuts.yesterday'):
       const yesterday = new Date(now.getTime() - 24 * 60 * 60 * 1000)
       firstDay = yesterday
       lastDay = yesterday
       break
-    case '本月':
+    case t('qualityReport.shortcuts.currentMonth'):
       firstDay = new Date(currentYear, currentMonth, 1)
       lastDay = new Date(currentYear, currentMonth + 1, 0)
       break
-    case '上月':
+    case t('qualityReport.shortcuts.lastMonth'):
       firstDay = new Date(currentYear, currentMonth - 1, 1)
       lastDay = new Date(currentYear, currentMonth, 0)
       break
-    case '本季':
+    case t('qualityReport.shortcuts.currentQuarter'):
       const currentQuarter = Math.floor(currentMonth / 3)
       firstDay = new Date(currentYear, currentQuarter * 3, 1)
       lastDay = new Date(currentYear, (currentQuarter + 1) * 3, 0)
       break
-    case '上季':
+    case t('qualityReport.shortcuts.lastQuarter'):
       const lastQuarter = Math.floor(currentMonth / 3) - 1
       firstDay = new Date(currentYear, lastQuarter * 3, 1)
       lastDay = new Date(currentYear, (lastQuarter + 1) * 3, 0)
@@ -459,7 +514,7 @@ async function fetchData(isInitial: boolean) {
   loading.value = true
   isFiltering.value = true
   hasError.value = false
-  statusText.value = '正在查询...'
+  statusText.value = String(t('common.querying'))
   resetSelectionState()
   lmeResponseText.value = ''
   
@@ -477,39 +532,30 @@ async function fetchData(isInitial: boolean) {
   if (grade.value.trim()) searchInfo.push(`牌号：${grade.value.trim()}`)
   if (lmeStatus.value.trim()) searchInfo.push(`LME状态：${lmeStatus.value.trim()}`)
   
-  message.value = searchInfo.length > 0 ? `查询条件：${searchInfo.join('，')}` : '查询所有数据'
+  message.value = searchInfo.length > 0
+    ? String(t('qualityReport.queryConditions', { conditions: searchInfo.join('，') }))
+    : String(t('qualityReport.queryAll'))
 
   try {
-    const resp = await fetch(`/api/qm/quality-report?${params.toString()}`)
+    const resp = await qmApi.getQualityReport(Object.fromEntries(params))
 
-    if (!resp.ok) {
-      throw new Error(`HTTP ${resp.status}: ${resp.statusText}`)
+    if (!resp.success) {
+      throw new Error(resp.message || '查询失败')
     }
 
-    const responseText = await resp.text()
-    if (!responseText.trim()) {
-      throw new Error('服务器返回空响应')
-    }
-
-    let json
-    try {
-      json = JSON.parse(responseText)
-    } catch (parseError: any) {
-      throw new Error(`JSON解析失败: ${parseError instanceof Error ? parseError.message : String(parseError)}. 响应内容: ${responseText.substring(0, 200)}`)
-    }
-
-    if (json.success && json.data) {
-      rows.value = json.data || []
-      statusText.value = '查询完成'
+    const json = resp.data
+    if (json) {
+      rows.value = json || []
+      statusText.value = String(t('common.queryDone'))
       hasError.value = false
       
       // 查询时清空选择状态，确保数据一致性
       resetSelectionState()
       
-      const recordCount = json.data.length || 0
-      message.value = isInitial 
-        ? `默认查询完成，共 ${recordCount} 条记录` 
-        : `查询完成，共 ${recordCount} 条记录`
+      const recordCount = json.length || 0
+      message.value = isInitial
+        ? String(t('qualityReport.defaultQueryDone', { count: recordCount }))
+        : String(t('qualityReport.queryDone', { count: recordCount }))
       // 强制界面刷新，确保checkbox状态正确
       await new Promise(resolve => setTimeout(resolve, 100))
     } else {
@@ -517,7 +563,7 @@ async function fetchData(isInitial: boolean) {
     }
   } catch (error) {
     console.error('查询失败:', error)
-    statusText.value = '查询失败'
+    statusText.value = String(t('common.queryFailed'))
     hasError.value = true
     message.value = `查询失败: ${error instanceof Error ? error.message : String(error)}`
   } finally {
@@ -565,7 +611,7 @@ function resetFilters() {
   rows.value = []
   
   // 更新状态消息
-  statusText.value = '就绪'
+  statusText.value = String(t('common.ready'))
     // 同步搜索值到 JoSearchPanel
     const newSearchValues: Record<string, any> = {}
     if (startDate.value) newSearchValues.dateRange_start = startDate.value
@@ -593,7 +639,7 @@ function onTableSelectionChange(keys: string[], selectedRows: any[]) {
       loadSelectedOrderDetails()
     }
   } else {
-    message.value = '请选择单号'
+    message.value = String(t('qualityReport.pleaseSelectOrder'))
     selectedOrderDetails.value = []
   }
 }
@@ -612,25 +658,14 @@ async function fetchDetailCounts(orderNumbers: string[]) {
   if (orderNumbers.length === 0) return {}
   
   try {
-    const resp = await fetch('/api/qm/quality-report/detail-counts', {
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/json'
-      },
-      body: JSON.stringify(orderNumbers)
-    })
+    const resp = await qmApi.getQualityReportDetailCounts(orderNumbers)
     
-    if (!resp.ok) {
-      throw new Error(`HTTP ${resp.status}: ${resp.statusText}`)
-    }
-    
-    const json = await resp.json()
-    if (json.success && json.data) {
+    if (resp.success && resp.data) {
       // 更新缓存
-      Object.assign(detailCountCache.value, json.data)
-      return json.data
+      Object.assign(detailCountCache.value, resp.data)
+      return resp.data
     } else {
-      throw new Error(json.message || '获取明细行数失败')
+      throw new Error(resp.message || '获取明细行数失败')
     }
   } catch (error) {
     console.error('获取明细行数失败:', error)
@@ -667,7 +702,7 @@ function onSelectAllCheckboxChange(checked: boolean) {
   } else {
     selectedOrders.value = []
     allSelected.value = false
-    message.value = '已取消选择'
+    message.value = String(t('common.ready'))
   }
 }
 
@@ -693,29 +728,17 @@ async function loadSelectedOrderDetails() {
       
       try {
         // 使用批量查询接口
-        const resp = await fetch('/api/qm/quality-report/details/batch', {
-          method: 'POST',
-          headers: {
-            'Content-Type': 'application/json'
-          },
-          body: JSON.stringify(batch)
-        })
+        const resp = await qmApi.getQualityReportBatchDetails({ orderIds: batch })
         
-        if (!resp.ok) {
-          throw new Error(`HTTP ${resp.status}`)
-        }
-        
-        const json = await resp.json()
-        
-        if (json.success && json.data && json.data.details) {
+        if (resp.success && resp.data && resp.data.details) {
           // 立即显示这批数据
-          allDetails.push(...json.data.details)
+          allDetails.push(...resp.data.details)
           selectedOrderDetails.value = [...allDetails]
           
           // 更新进度
           detailsProgress.value = Math.min(i + batchSize, selectedOrders.value.length)
         } else {
-          console.warn(`批次 ${i/batchSize + 1} 获取明细失败:`, json.message)
+          console.warn(`批次 ${i/batchSize + 1} 获取明细失败:`, resp.message)
         }
       } catch (error: any) {
         console.error(`批次 ${i/batchSize + 1} 加载异常:`, error)
@@ -727,11 +750,11 @@ async function loadSelectedOrderDetails() {
     }
     
     if (allDetails.length === 0) {
-      alert('没有获取到任何明细数据')
+      toastRef.value?.warning(String(t('qualityReport.noDetailData')), '提示')
     }
   } catch (error: any) {
     console.error('渐进式加载明细异常:', error)
-    alert(`加载明细失败: ${error.message || '网络错误'}`)
+    toastRef.value?.error(String(t('qualityReport.previewFailed', { message: error.message || t('errors.networkRetry') })))
   } finally {
     loadingDetails.value = false
   }
@@ -740,12 +763,12 @@ async function loadSelectedOrderDetails() {
 // 预览函数
 async function streamingPreview() {
   if (selectedOrders.value.length === 0) {
-    alert('请先选择单号')
+    toastRef.value?.warning(String(t('qualityReport.pleaseSelectOrder')), '提示')
     return
   }
 
   if (!sameGradeValidation.value) {
-    alert('选中订单的牌号不一致，无法合并导出。请选择相同牌号的订单。')
+    toastRef.value?.warning(String(t('qualityReport.gradeMismatch')), '提示')
     return
   }
 
@@ -978,91 +1001,35 @@ async function streamingPreview() {
       }
     }
     
-    const resp = await fetch('/api/qm/quality-report/preview-pdf', {
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/json'
-      },
-      body: JSON.stringify({
-        orderNumbers: selectedOrders.value,
-        templateName: "COA"
-      })
+    const resp = await qmApi.previewQualityReportPdf({
+      orderNumbers: selectedOrders.value,
+      templateName: "COA"
     })
 
-    if (!resp.ok) {
-      throw new Error(`HTTP ${resp.status}: ${resp.statusText}`)
-    }
-
-    // 检查响应类型
-    const contentType = resp.headers.get('content-type')
-    if (contentType && contentType.includes('application/json')) {
-      // 预览模式：返回Base64数据
-      const responseText = await resp.text()
-      let json
-      try {
-        json = JSON.parse(responseText)
-      } catch {
-        throw new Error(`响应解析失败: ${responseText}`)
+    if (resp.success && resp.data && resp.data.base64Data) {
+      // 将Base64转换为Blob
+      const base64Data = resp.data.base64Data
+      const binaryString = atob(base64Data)
+      const bytes = new Uint8Array(binaryString.length)
+      for (let i = 0; i < binaryString.length; i++) {
+        bytes[i] = binaryString.charCodeAt(i)
       }
+      const blob = new Blob([bytes], { type: 'application/pdf' })
       
-      if (json.success && json.data && json.data.base64Data) {
-        // 将Base64转换为Blob
-        const base64Data = json.data.base64Data
-        const binaryString = atob(base64Data)
-        const bytes = new Uint8Array(binaryString.length)
-        for (let i = 0; i < binaryString.length; i++) {
-          bytes[i] = binaryString.charCodeAt(i)
-        }
-        const blob = new Blob([bytes], { type: 'application/pdf' })
-        
-        if (previewWindow) {
-          updatePreviewProgress(blob.size, blob.size)
-          showPreviewPdf(blob)
-        }
-        message.value = '预览已在新窗口中打开'
-      } else {
-        throw new Error(json.message || '预览数据格式错误')
-      }
-    } else if (contentType && contentType.includes('application/pdf')) {
-      // 直接PDF文件流（下载模式）
-      const blob = await resp.blob()
       if (previewWindow) {
         updatePreviewProgress(blob.size, blob.size)
         showPreviewPdf(blob)
       }
-      message.value = '预览已在新窗口中打开'
+      message.value = String(t('qualityReport.previewOpened'))
     } else {
-      // 错误响应
-      const responseText = await resp.text()
-      let json
-      try {
-        json = JSON.parse(responseText)
-      } catch {
-        throw new Error(`预览失败: ${responseText}`)
-      }
-      throw new Error(json.message || '预览失败')
+      throw new Error(resp.message || '预览数据格式错误')
     }
-    setTimeout(() => {
-      message.value = ''
-    }, 3000)
-
   } catch (error) {
-    console.error('预览失败:', error)
-    const errorMessage = error instanceof Error ? error.message : String(error)
-    message.value = `预览失败: ${errorMessage}`
-    
-    // 尝试在预览窗口显示错误
-    try {
-      if (previewWindow && !previewWindow.closed) {
-        showPreviewError(errorMessage)
-      }
-    } catch (e) {
-      console.log('无法在预览窗口显示错误')
+    console.error('预览PDF失败:', error)
+    if (previewWindow) {
+      showPreviewError(error instanceof Error ? error.message : String(error))
     }
-    
-    setTimeout(() => {
-      message.value = ''
-    }, 5000)
+    message.value = `预览失败: ${error instanceof Error ? error.message : String(error)}`
   }
 }
 
@@ -1075,116 +1042,157 @@ async function previewReport() {
 // 生命周期
 async function downloadFile(type: string) {
   if (selectedOrders.value.length === 0) {
-    alert('请先选择单号')
+    toastRef.value?.warning(String(t('qualityReport.pleaseSelectOrder')), '提示')
     return
   }
 
   if (!sameGradeValidation.value) {
-    alert('选中订单的牌号不一致，无法合并导出。请选择相同牌号的订单。')
+    toastRef.value?.warning(String(t('qualityReport.gradeMismatch')), '提示')
     return
+  }
+
+  // 获取选中订单的完整数据
+  const selectedRows = rows.value.filter(row => selectedOrders.value.includes(row.orderNumber))
+  
+  // 检查bizDate和grade是否一致
+  const uniqueBizDates = [...new Set(selectedRows.map(row => {
+    const date = new Date(row.bizTime)
+    return `${date.getFullYear()}-${String(date.getMonth() + 1).padStart(2, '0')}-${String(date.getDate()).padStart(2, '0')}`
+  }))]
+  
+  const uniqueGrades = [...new Set(selectedRows.map(row => row.grade).filter(g => g))]
+  
+  // 如果bizDate或grade不一致，弹窗提醒
+  if (uniqueBizDates.length > 1 || uniqueGrades.length > 1) {
+    const confirmed = await dialogRef.value?.warning(
+      String(t('qualityReport.bizDateGradeMismatch')),
+      '提示'
+    )
+    if (!confirmed) {
+      return
+    }
   }
 
   try {
     const orderCount = selectedOrders.value.length
     message.value = orderCount > 1 ? `正在生成并下载 ${orderCount} 个订单的${type.toUpperCase()}文件...` : `正在生成并下载${type.toUpperCase()}文件...`
 
-    const resp = await fetch(`/api/qm/quality-report/download-${type}`, {
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/json'
-      },
-      body: JSON.stringify({
-        orderNumbers: selectedOrders.value,
-        templateName: "COA"
-      })
+    const resp = await qmApi.downloadQualityReport({
+      orderNumbers: selectedOrders.value,
+      type,
+      templateName: 'COA'
     })
 
-    if (!resp.ok) {
-      throw new Error(`HTTP ${resp.status}: ${resp.statusText}`)
+    const mimeType = type === 'excel'
+      ? 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet'
+      : 'application/pdf'
+    let blob: Blob
+
+    // 兼容两种返回：1) 文件流 Blob；2) JSON + Base64
+    if (resp instanceof Blob) {
+      blob = resp
+    } else {
+      if (!resp.success) {
+        throw new Error(resp.message || '下载失败')
+      }
+      if (!resp.data || typeof resp.data !== 'string') {
+        throw new Error('下载数据格式错误')
+      }
+      const binaryString = atob(resp.data)
+      const bytes = new Uint8Array(binaryString.length)
+      for (let i = 0; i < binaryString.length; i++) {
+        bytes[i] = binaryString.charCodeAt(i)
+      }
+      blob = new Blob([bytes], { type: mimeType })
     }
 
-    // 检查响应是否为文件下载
-    const contentType = resp.headers.get('content-type')
-    if (contentType && (contentType.includes('application/vnd.openxmlformats-officedocument.spreadsheetml.sheet') || 
-                        contentType.includes('application/pdf'))) {
-      // 文件下载
-      const blob = await resp.blob()
-      const url = window.URL.createObjectURL(blob)
-      const a = document.createElement('a')
-      a.style.display = 'none'
-      a.href = url
-      
-      // 从响应头获取文件名，如果没有则生成一个
-      const contentDisposition = resp.headers.get('content-disposition')
-      let fileName = `quality_report_${type}_${new Date().getTime()}`
-      if (contentDisposition) {
-        const fileNameMatch = contentDisposition.match(/filename[^;=\n]*=((['"]).*?\2|[^;\n]*)/)
-        if (fileNameMatch && fileNameMatch[1]) {
-          fileName = fileNameMatch[1].replace(/['"]/g, '')
-        }
-      }
-      
-      a.download = fileName.endsWith(type === 'excel' ? '.xlsx' : '.pdf') ? fileName : `${fileName}.${type === 'excel' ? 'xlsx' : 'pdf'}`
-      document.body.appendChild(a)
-      a.click()
-      window.URL.revokeObjectURL(url)
-      document.body.removeChild(a)
-      
-      message.value = orderCount > 1 ? `${type.toUpperCase()}文件下载成功: ${a.download}` : `${type.toUpperCase()}文件下载成功`
-    } else {
-      // 错误响应
-      const responseText = await resp.text()
-      let json
-      try {
-        json = JSON.parse(responseText)
-      } catch {
-        throw new Error(`下载失败: ${responseText}`)
-      }
-      throw new Error(json.message || '下载失败')
-    }
+    const url = window.URL.createObjectURL(blob)
+    const a = document.createElement('a')
+    a.style.display = 'none'
+    a.href = url
+    a.download = `COA_${type}_${new Date().getTime()}.${type === 'excel' ? 'xlsx' : 'pdf'}`
+    document.body.appendChild(a)
+    a.click()
+    window.URL.revokeObjectURL(url)
+    document.body.removeChild(a)
+    
+    toastRef.value?.success(`${type.toUpperCase()}文件下载成功`)
   } catch (error: any) {
     console.error(`下载${type}失败:`, error)
-    message.value = `下载${type}失败: ${error.message}`
+    toastRef.value?.error(`下载${type}失败: ${error.message}`)
   }
 }
 
 async function transmitToLme() {
   if (selectedOrders.value.length === 0) {
-    message.value = '请先选择单号'
+    toastRef.value?.warning(String(t('qualityReport.pleaseSelectOrder')), '提示')
     return
   }
 
   if (!sameGradeValidation.value) {
-    message.value = '选中订单的牌号不一致，无法传输。请选择相同牌号的订单。'
+    toastRef.value?.warning(String(t('qualityReport.diffGradeNoTransmit')), '提示')
     return
+  }
+
+  // 获取选中订单的完整数据
+  const selectedRows = rows.value.filter(row => selectedOrders.value.includes(row.orderNumber))
+  
+  // 检查bizDate和grade是否一致
+  const uniqueBizDates = [...new Set(selectedRows.map(row => {
+    const date = new Date(row.bizTime)
+    return `${date.getFullYear()}-${String(date.getMonth() + 1).padStart(2, '0')}-${String(date.getDate()).padStart(2, '0')}`
+  }))]
+  
+  const uniqueGrades = [...new Set(selectedRows.map(row => row.grade).filter(g => g))]
+  
+  // 如果bizDate或grade不一致，弹窗提醒
+  if (uniqueBizDates.length > 1 || uniqueGrades.length > 1) {
+    const confirmed = await dialogRef.value?.warning(
+      String(t('qualityReport.bizDateGradeMismatch')),
+      '提示'
+    )
+    if (!confirmed) {
+      return
+    }
+  }
+
+  // 检查同一天是否还有未勾选的订单
+  const allRowsOnSameDate = rows.value.filter(row => {
+    const selectedDate = new Date(selectedRows[0].bizTime)
+    const rowDate = new Date(row.bizTime)
+    return selectedDate.getFullYear() === rowDate.getFullYear() &&
+           selectedDate.getMonth() === rowDate.getMonth() &&
+           selectedDate.getDate() === rowDate.getDate() &&
+           row.grade === selectedRows[0].grade
+  })
+
+  if (allRowsOnSameDate.length > selectedRows.length) {
+    const confirmed = await dialogRef.value?.warning(
+      String(t('qualityReport.sameDateNotAllSelected')),
+      '提示'
+    )
+    if (!confirmed) {
+      return
+    }
   }
 
   try {
     const orderCount = selectedOrders.value.length
-    message.value = orderCount > 1 ? `正在传输 ${orderCount} 个订单到LME...` : '正在传输订单到LME...'
+    toastRef.value?.info(orderCount > 1 ? `正在传输 ${orderCount} 个订单到LME...` : '正在传输订单到LME...')
     lmeResponseText.value = ''
 
-    const resp = await fetch('/api/qm/quality-report/transmit-lme', {
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/json'
-      },
-      body: JSON.stringify({
-        orderNumbers: selectedOrders.value
-      })
+    const resp = await qmApi.transmitQualityReportLme({
+      orderNumbers: selectedOrders.value,
+      templateName: 'COA'
     })
 
-    const responseText = await resp.text()
-    let json
-    try {
-      json = JSON.parse(responseText)
-    } catch {
-      throw new Error(`传输失败: ${responseText}`)
+    if (!resp.success) {
+      throw new Error(resp.message || 'LME传输失败')
     }
 
-    lmeResponseText.value = JSON.stringify(json, null, 2)
+    lmeResponseText.value = JSON.stringify(resp, null, 2)
 
-    if (json.success && json.message) {
+    if (resp.success && resp.message) {
       // 成功响应，更新表格中的LME状态
       selectedOrders.value.forEach(orderNumber => {
         const row = rows.value.find(r => r.orderNumber === orderNumber)
@@ -1193,7 +1201,7 @@ async function transmitToLme() {
         }
       })
       
-      message.value = `LME传输成功: ${json.message}`
+      toastRef.value?.success(`LME传输成功: ${resp.message}`)
       
       // 可选：刷新数据以更新LME状态
       setTimeout(() => {
@@ -1208,11 +1216,11 @@ async function transmitToLme() {
         }
       })
       
-      throw new Error(json.message || 'LME传输失败')
+      throw new Error(resp.message || 'LME传输失败')
     }
   } catch (error: any) {
     console.error('LME传输失败:', error)
-    message.value = `LME传输失败: ${error.message}`
+    toastRef.value?.error(`LME传输失败: ${error.message}`)
     
     // 更新表格中的LME状态为失败
     selectedOrders.value.forEach(orderNumber => {
@@ -1226,12 +1234,12 @@ async function transmitToLme() {
 
 function printReport() {
   if (selectedOrders.value.length === 0) {
-    alert('请先选择单号')
+    toastRef.value?.warning(String(t('qualityReport.pleaseSelectOrder')), '提示')
     return
   }
 
   if (!sameGradeValidation.value) {
-    alert('选中订单的牌号不一致，无法打印。请选择相同牌号的订单。')
+    toastRef.value?.warning(String(t('qualityReport.diffGradeNoPrint')), '提示')
     return
   }
 
@@ -1242,17 +1250,7 @@ function printReport() {
 function formatDateTime(dateStr: string) {
   if (!dateStr) return ''
   const date = new Date(dateStr)
-  return date.toLocaleString('zh-CN')
-}
-
-function goHome() {
-  const bridge = (window as any).qmBridge
-  if (bridge && typeof bridge.navigateHome === 'function') {
-    bridge.navigateHome()
-    return
-  }
-
-  router.push('/')
+  return date.toLocaleString(locale.value === 'en-US' ? 'en-US' : 'zh-CN')
 }
 
 // 日期快捷选择功能
@@ -1350,8 +1348,8 @@ onMounted(() => {
   if (auto) {
     fetchData(true)
   } else {
-    statusText.value = '就绪'
-    message.value = '请选择时间范围并点击"查询"'
+    statusText.value = String(t('common.ready'))
+    message.value = String(t('qualityReport.selectDateAndQuery'))
   }
 })
 </script>

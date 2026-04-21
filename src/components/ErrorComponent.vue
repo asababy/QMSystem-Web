@@ -3,9 +3,9 @@
     <GlassCard class="error-card">
       <div class="error-content">
         <t-icon name="error-circle" size="48" color="#ef4444" />
-        <h3>组件加载失败</h3>
-        <p>{{ errorMessage || '网络连接异常，请稍后重试' }}</p>
-        <t-button theme="primary" @click="retry">重试</t-button>
+        <h3>{{ t('errors.componentLoadFailed') }}</h3>
+        <p>{{ errorMessage || t('errors.networkRetry') }}</p>
+        <t-button theme="primary" @click="retry">{{ t('common.retry') }}</t-button>
       </div>
     </GlassCard>
   </div>
@@ -13,9 +13,11 @@
 
 <script setup lang="ts">
 import { ref } from 'vue'
+import { useI18n } from 'vue-i18n'
 import GlassCard from './GlassCard.vue'
 
 const errorMessage = ref('')
+const { t } = useI18n()
 
 const retry = () => {
   window.location.reload()
