@@ -1,0 +1,14 @@
+@import './theme-light.css';
+@import './theme-dark.css';
+@import './theme-purple.css';
+
+/* 应用主题变量到全局元素 */
+html {
+  transition: background-color var(--transition-slow), color var(--transition-slow);
+}
+
+body {
+  background: var(--color-background);
+  color: var(--color-text-primary);
+  transition: background-color var(--transition-slow), color var(--transition-slow);
+}

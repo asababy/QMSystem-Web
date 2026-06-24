@@ -22,21 +22,24 @@ const props = withDefaults(defineProps<Props>(), {
   padding: '20px',
   borderRadius: 24,
   blurSigma: 22,
-  backgroundColor: 'rgba(255, 255, 255, 0.38)',
-  borderColor: 'rgba(255, 255, 255, 0.4)',
-  shadowColor: 'rgba(29, 27, 75, 0.06)'
+  backgroundColor: '',
+  borderColor: '',
+  shadowColor: ''
 })
 
-const cardStyle = computed(() => ({
-  '--glass-card-padding': typeof props.padding === 'number' 
-    ? `${props.padding}px` 
-    : props.padding,
-  '--glass-card-border-radius': `${props.borderRadius}px`,
-  '--glass-card-blur': `${props.blurSigma}px`,
-  '--glass-card-bg': props.backgroundColor,
-  '--glass-card-border': props.borderColor,
-  '--glass-card-shadow': props.shadowColor
-}))
+const cardStyle = computed(() => {
+  const styles: Record<string, string> = {
+    '--glass-card-padding': typeof props.padding === 'number' 
+      ? `${props.padding}px` 
+      : props.padding,
+    '--glass-card-border-radius': `${props.borderRadius}px`,
+    '--glass-card-blur': `${props.blurSigma}px`,
+  }
+  if (props.backgroundColor) styles['--glass-card-bg'] = props.backgroundColor
+  if (props.borderColor) styles['--glass-card-border'] = props.borderColor
+  if (props.shadowColor) styles['--glass-card-shadow'] = props.shadowColor
+  return styles
+})
 </script>
 
 <style scoped>
@@ -45,10 +48,11 @@ const cardStyle = computed(() => ({
   border-radius: var(--glass-card-border-radius);
   backdrop-filter: blur(var(--glass-card-blur));
   -webkit-backdrop-filter: blur(var(--glass-card-blur));
-  background: var(--glass-card-bg);
-  border: 1.2px solid var(--glass-card-border);
+  background-color: var(--glass-card-bg, var(--j-card-bg-color, var(--card-bg, rgba(255, 255, 255, 0.6))));
+  background-image: var(--glass-panel-bg-image, linear-gradient(to bottom, rgba(255, 255, 255, 0.1), rgba(255, 255, 255, 0.25), rgba(255, 255, 255, 0.1)));
+  border: 1.2px solid var(--glass-card-border, var(--color-card-border, rgba(255, 255, 255, 0.08)));
   box-shadow: 
-    0 14px 28px var(--glass-card-shadow),
+    var(--glass-card-shadow, var(--glass-panel-shadow, var(--shadow-card, 0 8px 32px rgba(0, 0, 0, 0.15)))),
     0 0 0 1px rgba(255, 255, 255, 0.05) inset;
   transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
   overflow: hidden;
@@ -80,9 +84,9 @@ const cardStyle = computed(() => ({
 .glass-card:hover {
   transform: translateY(-2px);
   box-shadow: 
-    0 20px 40px rgba(29, 27, 75, 0.12),
+    var(--glass-card-shadow-hover, var(--j-card-shadow-hover, var(--shadow-card-hover, 0 16px 40px rgba(0, 0, 0, 0.2)))),
     0 0 0 1px rgba(255, 255, 255, 0.08) inset;
-  border-color: rgba(255, 255, 255, 0.5);
+  border-color: var(--glass-card-border-hover, var(--color-card-border, rgba(255, 255, 255, 0.2)));
 }
 
 /* 内部光晕效果 */

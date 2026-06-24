@@ -17,28 +17,62 @@
             </div>
           </div>
 
-          <div class="header-right">
+          <div class="header-right" v-if="!isEmbedded">
             <div class="user-section">
-              <t-dropdown trigger="click" :popup-props="{ overlayClassName: 'user-dropdown-popover' }">
-                <t-button variant="text" size="small" class="user-btn">
-                  <t-avatar size="32" :image="userAvatar">
-                    <t-icon name="user" />
-                  </t-avatar>
-                  <span class="username">{{ userName }}</span>
-                  <t-icon name="chevron-down" size="16" />
+              <!-- 语言切换 -->
+              <t-dropdown trigger="click">
+                <t-button variant="text" shape="square" class="header-icon-btn">
+                  <t-icon name="translate-1" size="20" />
                 </t-button>
                 <t-dropdown-menu>
-                  <t-dropdown-item @click="handleProfile"><t-icon name="user-circle" /> {{ t('home.profile')
-                    }}</t-dropdown-item>
-                  <t-dropdown-item @click="handleSettings"><t-icon name="setting" /> {{ t('home.settings')
-                    }}</t-dropdown-item>
-                  <t-dropdown-item @click="handleLanguageSwitch('zh-CN')"><t-icon name="translate-1" /> {{
-                    t('common.chinese') }}</t-dropdown-item>
-                  <t-dropdown-item @click="handleLanguageSwitch('en-US')"><t-icon name="translate-1" /> {{
-                    t('common.english') }}</t-dropdown-item>
+                  <t-dropdown-item @click="handleLanguageSwitch('zh-CN')" :active="locale === 'zh-CN'">
+                    <t-icon name="translate-1" /> {{ t('common.chinese') }}
+                  </t-dropdown-item>
+                  <t-dropdown-item @click="handleLanguageSwitch('en-US')" :active="locale === 'en-US'">
+                    <t-icon name="translate-1" /> {{ t('common.english') }}
+                  </t-dropdown-item>
+                  <t-dropdown-item @click="handleLanguageSwitch('id-ID')" :active="locale === 'id-ID'">
+                    <t-icon name="translate-1" /> {{ t('common.indonesian') }}
+                  </t-dropdown-item>
+                </t-dropdown-menu>
+              </t-dropdown>
+
+              <!-- 主题切换 -->
+              <t-dropdown trigger="click">
+                <t-button variant="text" shape="square" class="header-icon-btn">
+                  <t-icon :name="currentThemeIcon" size="20" />
+                </t-button>
+                <t-dropdown-menu>
+                  <t-dropdown-item @click="handleThemeSwitch('light')" :active="currentThemeVal === 'light'">
+                    <t-icon name="sunny" /> {{ t('common.lightTheme') }}
+                  </t-dropdown-item>
+                  <t-dropdown-item @click="handleThemeSwitch('dark')" :active="currentThemeVal === 'dark'">
+                    <t-icon name="moon" /> {{ t('common.darkTheme') }}
+                  </t-dropdown-item>
+                  <t-dropdown-item @click="handleThemeSwitch('purple')" :active="currentThemeVal === 'purple'">
+                    <t-icon name="palette" /> {{ t('common.purpleTheme') }}
+                  </t-dropdown-item>
+                </t-dropdown-menu>
+              </t-dropdown>
+
+              <!-- 用户头像下拉 -->
+              <t-dropdown trigger="click" :popup-props="{ overlayClassName: 'user-dropdown-popover' }">
+                <div class="user-avatar-trigger" style="cursor: pointer;">
+                  <t-avatar size="36" :image="userAvatar">
+                    <t-icon name="user" />
+                  </t-avatar>
+                </div>
+                <t-dropdown-menu>
+                  <t-dropdown-item @click="handleProfile">
+                    <t-icon name="user-circle" /> {{ t('home.profile') }}
+                  </t-dropdown-item>
+                  <t-dropdown-item @click="handleSettings">
+                    <t-icon name="setting" /> {{ t('home.settings') }}
+                  </t-dropdown-item>
                   <t-dropdown-item divider />
-                  <t-dropdown-item @click="handleLogout"><t-icon name="logout" /> {{ t('home.logout')
-                    }}</t-dropdown-item>
+                  <t-dropdown-item @click="handleLogout">
+                    <t-icon name="logout" /> {{ t('home.logout') }}
+                  </t-dropdown-item>
                 </t-dropdown-menu>
               </t-dropdown>
             </div>
@@ -145,8 +179,8 @@
               </div>
               <div class="activity-list">
                 <div class="activity-item" v-for="activity in recentActivities" :key="activity.id">
-                  <div class="activity-icon" :style="{ background: activity.color }">
-                    <t-icon :name="activity.icon" size="16" color="white" />
+                  <div :style="{ background: activity.color }">
+                    <t-icon :name="activity.icon" size="13" color="white" />
                   </div>
                   <div class="activity-content">
                     <p class="activity-text">{{ activity.text }}</p>
@@ -214,13 +248,30 @@
 import { ref, computed, onMounted, onUnmounted } from 'vue'
 import { useRouter } from 'vue-router'
 import { useI18n } from 'vue-i18n'
-import GlassBackgroundLayer from '@/components/GlassBackgroundLayer.vue'
-import GlassCard from '@/components/GlassCard.vue'
+import GlassBackgroundLayer from '@/components/glass/GlassBackgroundLayer.vue'
+import GlassCard from '@/components/glass/GlassCard.vue'
 import qmsMenu from '@/router/qms_menu.json'
 import { setLanguage } from '@/locales'
+import { setTheme, getCurrentTheme } from '@/utils/theme'
 
 const router = useRouter()
-const { t } = useI18n()
+const { t, locale } = useI18n()
+
+// 是否嵌入到微前端主应用
+const isEmbedded = computed(() => !!(window as any).__POWERED_BY_QIANKUN__)
+
+// 当前主题（用于下拉菜单的高亮）
+const currentThemeVal = ref(getCurrentTheme())
+
+const handleThemeChangeGlobal = (e: Event) => {
+  currentThemeVal.value = (e as CustomEvent).detail?.theme || getCurrentTheme()
+}
+
+const currentThemeIcon = computed(() => {
+  if (currentThemeVal.value === 'dark') return 'moon'
+  if (currentThemeVal.value === 'purple') return 'palette'
+  return 'sunny'
+})
 
 // 用户信息
 const userName = ref('')
@@ -403,6 +454,10 @@ const handleSettings = () => router.push('/settings')
 const handleLanguageSwitch = (lang: string) => {
   setLanguage(lang)
 }
+
+const handleThemeSwitch = (theme: string) => {
+  setTheme(theme)
+}
 const handleLogout = () => {
   localStorage.removeItem('accessToken')
   router.push('/login')
@@ -545,6 +600,7 @@ const handleQmInit = (event: Event) => {
 
 onMounted(() => {
   window.addEventListener('qm:init', handleQmInit as EventListener)
+  window.addEventListener('qm:theme-changed', handleThemeChangeGlobal as EventListener)
   syncUser()
   initWebSocket()
   startActivitiesAutoRefresh()
@@ -557,6 +613,7 @@ onMounted(() => {
 
 onUnmounted(() => {
   window.removeEventListener('qm:init', handleQmInit as EventListener)
+  window.removeEventListener('qm:theme-changed', handleThemeChangeGlobal as EventListener)
   if (socket.value) socket.value.close()
   stopActivitiesAutoRefresh()
 })
@@ -574,8 +631,6 @@ onUnmounted(() => {
   position: relative;
   z-index: 1;
   padding: 20px;
-  max-width: 1400px;
-  margin: 0 auto;
 }
 
 /* 章节标题 */
@@ -586,14 +641,14 @@ onUnmounted(() => {
 .section-title {
   font-size: 28px;
   font-weight: 700;
-  color: #1d1b4b;
+  color: var(--color-text-primary);
   margin: 0 0 4px 0;
   letter-spacing: -0.3px;
 }
 
 .section-subtitle {
   font-size: 16px;
-  color: rgba(29, 27, 75, 0.55);
+  color: var(--color-text-secondary);
   margin: 0;
   font-weight: 500;
 }
@@ -614,7 +669,7 @@ onUnmounted(() => {
 
 .nav-card:hover {
   transform: translateY(-4px);
-  box-shadow: 0 20px 40px rgba(29, 27, 75, 0.12);
+  box-shadow: var(--shadow-card);
 }
 
 .nav-card-large {
@@ -646,13 +701,13 @@ onUnmounted(() => {
 .nav-title {
   font-size: 18px;
   font-weight: 700;
-  color: #1d1b4b;
+  color: var(--color-text-primary);
   margin: 0 0 8px 0;
 }
 
 .nav-description {
   font-size: 14px;
-  color: rgba(29, 27, 75, 0.55);
+  color: var(--color-text-secondary);
   margin: 0 0 16px 0;
   line-height: 1.5;
 }
@@ -671,18 +726,18 @@ onUnmounted(() => {
 .stat-value {
   font-size: 20px;
   font-weight: 700;
-  color: #1d1b4b;
+  color: var(--color-text-primary);
 }
 
 .stat-label {
   font-size: 12px;
-  color: rgba(29, 27, 75, 0.55);
+  color: var(--color-text-secondary);
   font-weight: 500;
 }
 
 .nav-arrow {
   margin-left: auto;
-  color: rgba(29, 27, 75, 0.42);
+  color: var(--color-text-muted);
 }
 
 /* Header */
@@ -701,6 +756,7 @@ onUnmounted(() => {
   gap: 16px;
   padding: 16px 24px;
   min-height: 80px;
+  transition: all var(--transition-base);
 }
 
 .header-left {
@@ -726,7 +782,7 @@ onUnmounted(() => {
   width: 48px;
   height: 48px;
   border-radius: 12px;
-  background: linear-gradient(135deg, #7c6cf0 0%, #7eb6ff 100%);
+  background: var(--gradient-primary, linear-gradient(135deg, #7c6cf0 0%, #7eb6ff 100%));
   display: flex;
   align-items: center;
   justify-content: center;
@@ -736,34 +792,52 @@ onUnmounted(() => {
 .portal-title {
   font-size: 22px;
   font-weight: 700;
-  color: #1d1b4b;
+  color: var(--color-text-primary);
   margin: 0;
+  line-height: 1.2;
 }
 
 .portal-subtitle {
   font-size: 12px;
-  color: rgba(29, 27, 75, 0.5);
-  margin: 0;
+  color: var(--color-text-secondary);
+  margin: 4px 0 0 0;
+  line-height: 1.2;
 }
 
 .user-section {
   display: flex;
   align-items: center;
+  gap: 12px;
 }
 
-.user-btn {
+.header-icon-btn {
   display: flex;
   align-items: center;
-  gap: 8px;
-  border-radius: 10px;
-  padding: 4px 8px;
-  min-height: 36px;
+  justify-content: center;
+  width: 36px;
+  height: 36px;
+  border-radius: 50% !important;
+  color: var(--color-text-primary) !important;
+  transition: background-color var(--transition-fast) !important;
 }
 
-.username {
-  font-size: 14px;
-  font-weight: 500;
-  color: #1d1b4b;
+.header-icon-btn:hover {
+  background-color: var(--color-hover) !important;
+}
+
+.user-avatar-trigger {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 50%;
+  padding: 2px;
+  border: 2px solid transparent;
+  transition: all var(--transition-fast);
+}
+
+.user-avatar-trigger:hover {
+  border-color: var(--color-primary);
+  transform: scale(1.05);
 }
 
 /* 用户下拉菜单尺寸收敛 */
@@ -787,13 +861,13 @@ onUnmounted(() => {
 /* 业务导航 Tab 样式 */
 .portal-nav-card {
   margin-bottom: 32px;
-  border: 1px solid rgba(255, 255, 255, 0.4);
+  border: 1px solid var(--glass-panel-border, rgba(255, 255, 255, 0.4));
 }
 
 .group-tabs-wrapper {
   display: flex;
   gap: 32px;
-  border-bottom: 1px solid rgba(29, 27, 75, 0.08);
+  border-bottom: 1px solid var(--color-border);
   margin-bottom: 24px;
   overflow-x: auto;
 }
@@ -808,11 +882,11 @@ onUnmounted(() => {
 .tab-label {
   font-size: 16px;
   font-weight: 500;
-  color: rgba(29, 27, 75, 0.6);
+  color: var(--color-text-secondary);
 }
 
 .group-tab-item.active .tab-label {
-  color: #0052d9;
+  color: var(--color-primary);
   font-weight: 700;
 }
 
@@ -822,7 +896,7 @@ onUnmounted(() => {
   left: 0;
   width: 0;
   height: 3px;
-  background: #0052d9;
+  background: var(--color-primary);
   border-radius: 2px;
   transition: width 0.3s;
 }
@@ -842,18 +916,20 @@ onUnmounted(() => {
   display: flex;
   align-items: center;
   padding: 20px;
-  background: rgba(255, 255, 255, 0.3);
-  border: 1px solid rgba(255, 255, 255, 0.5);
+  background: var(--glass-panel-bg, rgba(255, 255, 255, 0.3));
+  border: 1px solid var(--glass-panel-border, rgba(255, 255, 255, 0.5));
   border-radius: 16px;
   cursor: pointer;
+  backdrop-filter: blur(12px);
+  -webkit-backdrop-filter: blur(12px);
   transition: all 0.3s ease;
 }
 
 .portal-item-card:hover {
-  background: white;
+  background: var(--color-surface);
   transform: translateY(-4px);
-  box-shadow: 0 12px 30px rgba(29, 27, 75, 0.1);
-  border-color: #0052d9;
+  box-shadow: var(--shadow-card);
+  border-color: var(--color-primary);
 }
 
 .portal-item-icon {
@@ -875,13 +951,13 @@ onUnmounted(() => {
 .portal-item-title {
   font-size: 16px;
   font-weight: 600;
-  color: #1d1b4b;
+  color: var(--color-text-primary);
   margin: 0 0 4px 0;
 }
 
 .portal-item-desc {
   font-size: 12px;
-  color: rgba(29, 27, 75, 0.5);
+  color: var(--color-text-secondary);
   margin: 0;
   text-overflow: ellipsis;
   white-space: nowrap;
@@ -889,7 +965,7 @@ onUnmounted(() => {
 }
 
 .arrow-icon {
-  color: rgba(29, 27, 75, 0.3);
+  color: var(--color-text-muted);
   opacity: 0;
   transition: 0.3s;
 }
@@ -918,9 +994,11 @@ onUnmounted(() => {
   align-items: center;
   gap: 12px;
   padding: 16px;
-  background: rgba(255, 255, 255, 0.4);
+  background: var(--glass-panel-bg, rgba(255, 255, 255, 0.4));
   border-radius: 12px;
-  border: 1px solid rgba(255, 255, 255, 0.4);
+  border: 1px solid var(--glass-panel-border, rgba(255, 255, 255, 0.4));
+  backdrop-filter: blur(8px);
+  -webkit-backdrop-filter: blur(8px);
 }
 
 .status-icon {
@@ -934,23 +1012,23 @@ onUnmounted(() => {
 }
 
 .status-icon.online {
-  background: linear-gradient(135deg, #10b981 0%, #059669 100%);
+  background: var(--gradient-success, linear-gradient(135deg, #10b981 0%, #059669 100%));
 }
 
 .status-icon.warning {
-  background: linear-gradient(135deg, #f59e0b 0%, #d97706 100%);
+  background: var(--gradient-warning, linear-gradient(135deg, #f59e0b 0%, #d97706 100%));
 }
 
 .status-icon.offline {
-  background: linear-gradient(135deg, #ef4444 0%, #dc2626 100%);
+  background: var(--gradient-danger, linear-gradient(135deg, #ef4444 0%, #dc2626 100%));
 }
 
 .status-indicator.offline {
-  color: #ef4444;
+  color: var(--color-danger);
 }
 
 .status-indicator.offline .status-dot {
-  background: #ef4444;
+  background: var(--color-danger);
 }
 
 .activity-list {
@@ -965,8 +1043,11 @@ onUnmounted(() => {
   align-items: center;
   gap: 12px;
   padding: 12px;
-  background: rgba(255, 255, 255, 0.2);
+  background: var(--glass-panel-bg, rgba(255, 255, 255, 0.2));
   border-radius: 10px;
+  border: 1px solid var(--glass-panel-border, rgba(255, 255, 255, 0.1));
+  backdrop-filter: blur(8px);
+  -webkit-backdrop-filter: blur(8px);
 }
 
 /* 动画 */
@@ -995,13 +1076,13 @@ onUnmounted(() => {
   align-items: center;
   justify-content: space-between;
   padding: 0 16px 16px;
-  border-bottom: 1px solid rgba(0, 0, 0, 0.06);
+  border-bottom: 1px solid var(--color-border);
   margin-bottom: 16px;
 }
 
 .auto-refresh-hint {
   font-size: 12px;
-  color: rgba(29, 27, 75, 0.5);
+  color: var(--color-text-secondary);
 }
 
 .spin-animation {
@@ -1030,14 +1111,14 @@ onUnmounted(() => {
   align-items: center;
   gap: 12px;
   padding: 12px;
-  background: rgba(255, 255, 255, 0.6);
+  background: var(--glass-panel-bg, rgba(255, 255, 255, 0.6));
+  border: 1px solid var(--glass-panel-border, rgba(255, 255, 255, 0.4));
   border-radius: 12px;
-  border: 1px solid rgba(255, 255, 255, 0.4);
   transition: all 0.2s ease;
 }
 
 .user-activity-item:hover {
-  background: rgba(255, 255, 255, 0.8);
+  background: var(--color-surface);
   transform: translateX(4px);
 }
 
@@ -1053,13 +1134,13 @@ onUnmounted(() => {
   width: 12px;
   height: 12px;
   border-radius: 50%;
-  background: #9ca3af;
+  background: var(--color-text-disabled);
   border: 2px solid white;
   transition: background 0.3s ease;
 }
 
 .online-status.online {
-  background: #10b981;
+  background: var(--color-success);
 }
 
 .user-info {
@@ -1077,12 +1158,12 @@ onUnmounted(() => {
 .user-real-name {
   font-size: 14px;
   font-weight: 600;
-  color: #1d1b4b;
+  color: var(--color-text-primary);
 }
 
 .user-username {
   font-size: 12px;
-  color: rgba(29, 27, 75, 0.5);
+  color: var(--color-text-secondary);
 }
 
 .user-meta {
@@ -1090,7 +1171,7 @@ onUnmounted(() => {
   align-items: center;
   gap: 12px;
   font-size: 12px;
-  color: rgba(29, 27, 75, 0.5);
+  color: var(--color-text-secondary);
 }
 
 .login-time {
@@ -1099,7 +1180,7 @@ onUnmounted(() => {
 
 .user-ip {
   font-family: monospace;
-  background: rgba(29, 27, 75, 0.05);
+  background: var(--color-disabled, rgba(0, 0, 0, 0.05));
   padding: 2px 6px;
   border-radius: 4px;
 }
@@ -1110,13 +1191,13 @@ onUnmounted(() => {
   border-radius: 20px;
   font-size: 12px;
   font-weight: 500;
-  background: rgba(156, 163, 175, 0.15);
-  color: #6b7280;
+  background: var(--color-disabled, rgba(156, 163, 175, 0.15));
+  color: var(--color-text-secondary);
 }
 
 .user-status-badge.online {
   background: rgba(16, 185, 129, 0.15);
-  color: #059669;
+  color: var(--color-success-dark);
 }
 
 .empty-state {
@@ -1124,12 +1205,41 @@ onUnmounted(() => {
   flex-direction: column;
   align-items: center;
   padding: 48px 16px;
-  color: rgba(29, 27, 75, 0.5);
+  color: var(--color-text-secondary);
 }
 
 .empty-state p {
   margin-top: 12px;
   font-size: 14px;
+}
+
+/* 嵌入模式自适应微缩排版 */
+:global(.qm-app[data-embedded="true"]) .portal-header {
+  margin-bottom: 20px;
+}
+
+:global(.qm-app[data-embedded="true"]) .header-content :deep(.glass-card-content) {
+  padding: 12px 20px;
+  min-height: 64px;
+}
+
+:global(.qm-app[data-embedded="true"]) .logo-icon {
+  width: 40px;
+  height: 40px;
+  border-radius: 10px;
+}
+
+:global(.qm-app[data-embedded="true"]) .logo-icon :deep(.t-icon) {
+  font-size: 20px;
+}
+
+:global(.qm-app[data-embedded="true"]) .portal-title {
+  font-size: 18px;
+}
+
+:global(.qm-app[data-embedded="true"]) .portal-subtitle {
+  font-size: 11px;
+  margin-top: 2px;
 }
 
 @media (max-width: 1024px) {

@@ -12,11 +12,12 @@ type JsonRoute = {
 };
 
 const views = import.meta.glob('../views/**/*.vue');
+const applicationViews = import.meta.glob('../application/**/*.vue');
 
 const resolveComponent = (componentPath?: string) => {
   if (!componentPath) return undefined;
   const normalizedPath = componentPath.replace(/^@\//, '../');
-  const component = views[normalizedPath];
+  const component = views[normalizedPath] || applicationViews[normalizedPath];
   if (!component) {
     return undefined;
   }

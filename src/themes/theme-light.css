@@ -1,0 +1,55 @@
+@import './base.css';
+
+[data-theme="light"] {
+  /* --- 1. 核心与文本颜色 (Core & Text) --- */
+  --color-background: #f8fafc;
+  --color-border: #e2e8f0;
+  --color-surface: #ffffff;
+  --color-text-disabled: #9ca3af;
+  --color-text-muted: #6b7280;
+  --color-text-primary: #1e293b;
+  --color-text-secondary: #64748b;
+
+  /* --- 2. 品牌与状态颜色 (Brand & State) --- */
+  --color-primary: #2563eb;
+  --color-success: #10b981;
+  --color-success-dark: #059669;
+  --color-success-light: #d1fae5;
+  --color-warning: #f59e0b;
+  --color-warning-dark: #d97706;
+  --color-warning-light: #fef3c7;
+  --color-danger: #ef4444;
+  --color-danger-dark: #dc2626;
+  --color-danger-light: #fee2e2;
+
+  /* --- 3. 交互基础色 (Interaction Base) --- */
+  --color-disabled: #f1f5f9;
+  --color-hover: #e2e8f0;
+
+  /* --- 4. TDesign 组件颜色 --- */
+  --td-brand-color: #2563eb;
+  --td-brand-color-hover: #1d4ed8;
+  --td-brand-color-active: #1e40af;
+
+  /* --- 5. 卡片与面板 (Card & Panels) --- */
+  --card-bg: rgba(255, 255, 255, 0.7);
+  --glass-panel-bg: rgba(255, 255, 255, 0.7);
+  --glass-panel-border: rgba(255, 255, 255, 0.3);
+  --glass-panel-bg-image: linear-gradient(to bottom, rgba(255, 255, 255, 0.4), rgba(255, 255, 255, 0.8), rgba(255, 255, 255, 0.4));
+  --j-card-bg-color: rgba(255, 255, 255, 0.7);
+
+  /* --- 6. 按钮与阴影 (Buttons & Shadows) --- */
+  --gradient-primary: linear-gradient(135deg, #3b82f6 0%, #1d4ed8 100%);
+  --gradient-success: linear-gradient(135deg, #10b981 0%, #059669 100%);
+  --gradient-warning: linear-gradient(135deg, #f59e0b 0%, #d97706 100%);
+  --gradient-danger: linear-gradient(135deg, #ef4444 0%, #dc2626 100%);
+  --shadow-card: 0 4px 16px rgba(0, 0, 0, 0.08);
+  --shadow-card-hover: 0 12px 28px rgba(0, 0, 0, 0.12);
+
+  /* --- 7. 全局布局 (Layout) --- */
+  --bg-light: #ffffff;
+  --bg-secondary: #f8fafc;
+  --text-main: #1e293b;
+  --text-dim: #64748b;
+  --border-glass: rgba(0, 0, 0, 0.08);
+}

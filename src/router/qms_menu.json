@@ -9,14 +9,14 @@
       {
         "name":"QualityReport",
         "path":"coa",
-        "meta":{"title":"COA报告","requiresAuth":true,"isKeepAlive":true,"order":1,"iconClass":"bi bi-clipboard-data","elmenuitemgroup":"质量报告"},
-        "component":"@/views/reports/quality-report.vue"
+        "meta":{"title":"COA报告","requiresAuth":true,"isKeepAlive":true,"isTabCloseAlive":false,"order":1,"iconClass":"bi bi-clipboard-data","elmenuitemgroup":"质量报告"},
+        "component":"@/application/quality-report/QualityReport.vue"
       },
       {
         "name":"LmeDetail",
         "path":"lme",
-        "meta":{"title":"LME相关","requiresAuth":true,"isKeepAlive":true,"order":2,"iconClass":"bi bi-clipboard-data","elmenuitemgroup":"质量报告"},
-        "component":"@/views/reports/lme-report.vue"
+        "meta":{"title":"LME相关","requiresAuth":true,"isKeepAlive":true,"isTabCloseAlive":false,"order":2,"iconClass":"bi bi-clipboard-data","elmenuitemgroup":"质量报告"},
+        "component":"@/application/lme-report/LmeReport.vue"
       }
     ]
   },

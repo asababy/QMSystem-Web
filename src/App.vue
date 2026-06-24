@@ -1,66 +1,78 @@
 <template>
-  <t-config-provider :global-config="{ locale: tdLocale }">
-    <div class="qm-app">
-      <router-view v-slot="{ Component, route }">
-        <keep-alive :include="keepAliveRouteNames">
-          <component
-            :is="Component"
-            :key="route.fullPath"
-          />
-        </keep-alive>
-      </router-view>
-    </div>
-  </t-config-provider>
+  <div class="qm-app">
+    <router-view v-slot="{ Component, route }">
+      <keep-alive :include="keepAliveRouteNames">
+        <component :is="Component" :key="route.fullPath" />
+      </keep-alive>
+    </router-view>
+  </div>
 </template>
 
 <script setup lang="ts">
-import { computed } from 'vue'
+import { computed, ref, onMounted, onUnmounted } from 'vue'
 import { useRouter } from 'vue-router'
-import zhCN from 'tdesign-vue-next/es/locale/zh_CN'
-import enUS from 'tdesign-vue-next/es/locale/en_US'
-import { useI18n } from 'vue-i18n'
 
 const router = useRouter()
-const { locale } = useI18n()
 
-const keepAliveRouteNames = computed(() => {
-  const routes = router.getRoutes()
-  return routes
-    .filter(route => route.meta?.isKeepAlive && route.name)
-    .map(route => String(route.name))
+// 根据静态配置初始化 keep-alive 页面路由名
+const staticKeepAliveNames = router.getRoutes()
+  .filter(route => route.meta?.isKeepAlive && route.name)
+  .map(route => String(route.name))
+
+const activeKeepAliveNames = ref<string[]>([...staticKeepAliveNames])
+
+const keepAliveRouteNames = computed(() => activeKeepAliveNames.value)
+
+// 宿主关闭 Tab 时的监听器
+const handleHostTabClose = (e: Event) => {
+  const customEvent = e as CustomEvent<{ path: string }>;
+  const hostPath = customEvent.detail?.path;
+  if (!hostPath) return;
+
+  // 将 hostPath (e.g. /qm/quality/coa) 转换为子应用内部相对路径 (e.g. /quality/coa)
+  const qmPrefix = '/qm';
+  const relativePath = hostPath.startsWith(qmPrefix)
+    ? hostPath.slice(qmPrefix.length)
+    : hostPath;
+
+  // 通过 vue-router 匹配到具体的子应用路由对象，获取其 name
+  const matched = router.resolve(relativePath);
+  if (matched && matched.name) {
+    const routeName = String(matched.name);
+
+    // 从活动缓存列表中移除该组件的 name，Vue 的 keep-alive 会自动销毁对应的缓存
+    activeKeepAliveNames.value = activeKeepAliveNames.value.filter(
+      name => name !== routeName
+    );
+  }
+}
+
+// 重新激活路由时，如果它本身声明了 keepAlive，重新加入缓存池
+const removeAfterEach = router.afterEach((to) => {
+  if (to.meta?.isKeepAlive && to.name) {
+    const name = String(to.name);
+    if (!activeKeepAliveNames.value.includes(name)) {
+      activeKeepAliveNames.value.push(name);
+    }
+  }
 })
 
-const tdLocale = computed(() => (locale.value === 'en-US' ? enUS : zhCN))
+onMounted(() => {
+  window.addEventListener('qiankun-tab-close', handleHostTabClose)
+})
+
+onUnmounted(() => {
+  window.removeEventListener('qiankun-tab-close', handleHostTabClose)
+  removeAfterEach()
+})
 </script>
 
 <style>
+@import './styles/animations.css';
+
 /* 子应用根容器样式，避免污染主应用全局 */
 .qm-app {
-  /* TDesign 主题与主应用（Element 蓝系）对齐，嵌入时视觉更连贯 */
-  --td-brand-color: #2563eb;
-  --td-brand-color-hover: #1d4ed8;
-  --td-brand-color-active: #1e40af;
-  --td-brand-color-focus: #dbeafe;
-  --td-brand-color-light: #eff6ff;
-  --td-text-color-link: #2563eb;
-
-  /* 现代白色系配色 */
-  --bg-light: #ffffff;
-  --bg-secondary: #f8fafc;
-  --card-bg: #ffffff;
-  --primary-accent: #3b82f6;
-  --accent-gradient: linear-gradient(135deg, #3b82f6 0%, #1d4ed8 100%);
-  --text-main: #1e293b;
-  --text-dim: #64748b;
-  --border-glass: rgba(0, 0, 0, 0.08);
-  --success: #10b981;
-  --danger: #ef4444;
-  --warning: #f59e0b;
-  --transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
-
   box-sizing: border-box;
-  font-family: 'Inter', -apple-system, BlinkMacSystemFont, "Segoe UI", "Microsoft YaHei", sans-serif;
-  background: linear-gradient(135deg, #f8fafc 0%, #e2e8f0 100%);
   color: var(--text-main);
   min-height: 100vh;
   width: 100%;
@@ -76,85 +88,8 @@ const tdLocale = computed(() => (locale.value === 'en-US' ? enUS : zhCN))
   margin: 0;
 }
 
-/* Toast 提示 */
-.qm-app .toast {
-  position: fixed;
-  bottom: 24px;
-  right: 24px;
-  padding: 12px 24px;
-  border-radius: 12px;
-  color: white;
-  font-weight: 500;
-  z-index: 1000;
-  box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.5);
-  animation: toastIn 0.3s cubic-bezier(0.18, 0.89, 0.32, 1.28);
-}
-
-@keyframes toastIn {
-  from {
-    transform: translateX(100%);
-    opacity: 0;
-  }
-  to {
-    transform: translateX(0);
-    opacity: 1;
-  }
-}
-
-@keyframes pulse {
-  0% {
-    transform: scale(1);
-    opacity: 1;
-  }
-  70% {
-    transform: scale(2.5);
-    opacity: 0;
-  }
-  100% {
-    opacity: 0;
-  }
-}
-
-@keyframes slideUp {
-  from {
-    opacity: 0;
-    transform: translateY(30px);
-  }
-  to {
-    opacity: 1;
-    transform: translateY(0);
-  }
-}
-
-@media (max-width: 768px) {
-  .qm-app .modules-grid {
-    grid-template-columns: 1fr;
-  }
-
-  .qm-app header {
-    padding: 0 1rem;
-  }
-}
-
 /* 嵌入模式样式 - 仅作用于子应用容器，避免影响宿主框架 */
-body.embedded-mode .qm-app .sidebar,
-body.embedded-mode .qm-app .main-nav {
-  display: none !important;
-}
-
-body.embedded-mode .qm-app .main-content {
-  margin-left: 0 !important;
-  margin-top: 0 !important;
-  padding: 1rem !important;
-  height: 100% !important;
-  min-height: 0 !important;
-}
-
-body.embedded-mode .qm-app {
-  background: #ffffff !important;
-}
-
-body.embedded-mode .glass-background-layer {
+.qm-app[data-embedded="true"] .glass-background-layer {
   display: none !important;
 }
 </style>

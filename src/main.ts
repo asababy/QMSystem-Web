@@ -1,13 +1,15 @@
-﻿import { createApp, type App as VueApp, nextTick } from 'vue'
+import { createApp, type App as VueApp, nextTick } from 'vue'
 import { createPinia } from 'pinia'
 import TDesign from 'tdesign-vue-next'
 import 'tdesign-vue-next/es/style/index.css'
 import '@jovue/ui/style.css'
+import './themes/index.css'
 import App from './App.vue'
 import { createQmRouter, getQmMenuRoutes } from './router'
 import { getApiList } from './api/registry'
 import { createMemoryHistory, createWebHashHistory, type Router } from 'vue-router'
 import i18n, { setLanguage } from './locales'
+import { setTheme } from './utils/theme.ts'
 
 type QmContext = {
   accessToken?: string
@@ -26,7 +28,7 @@ type QmProps = QmContext & {
   onLogout?: () => void
   onNotify?: (message: string, level?: string, title?: string) => void
   onGlobalStateChange?: (
-    callback: (state: { locale?: string; language?: string }, prevState: { locale?: string; language?: string }) => void,
+    callback: (state: { locale?: string; language?: string; theme?: string }, prevState: { locale?: string; language?: string; theme?: string }) => void,
     fireImmediately?: boolean
   ) => void
   offGlobalStateChange?: () => void
@@ -51,6 +53,8 @@ let router: Router | null = null
 let microHashChangeHandler: (() => void) | null = null
 let removeRouterAfterEach: (() => void) | null = null
 let offGlobalStateChangeHandler: (() => void) | null = null
+let localThemeChangeHandler: ((e: Event) => void) | null = null
+let localLangChangeHandler: ((e: Event) => void) | null = null
 let currentProps: QmProps = {}
 
 const DEFAULT_HOME_PATH = '/home'
@@ -73,6 +77,9 @@ const applyContext = (props: QmProps = {}) => {
   }
   if (typeof props.locale === 'string' && props.locale) {
     setLanguage(props.locale)
+  }
+  if (typeof props.theme === 'string' && props.theme) {
+    setTheme(props.theme)
   }
 
   window.dispatchEvent(new CustomEvent('qm:init', {
@@ -169,11 +176,36 @@ const render = async (props: QmProps = {}, isMicro = false) => {
         if (lang) {
           setLanguage(lang)
         }
+        const theme = state?.theme
+        if (theme) {
+          setTheme(theme)
+        }
       }, true)
       offGlobalStateChangeHandler = () => {
         props.offGlobalStateChange?.()
       }
     }
+
+    localThemeChangeHandler = (e: Event) => {
+      const theme = (e as CustomEvent).detail?.theme
+      if (theme && currentProps.setGlobalState) {
+        currentProps.setGlobalState({ theme })
+      }
+    }
+    localLangChangeHandler = (e: Event) => {
+      const lang = (e as CustomEvent).detail?.lang
+      if (lang && currentProps.setGlobalState) {
+        let mappedLang = 'en'
+        if (lang.startsWith('zh')) {
+          mappedLang = 'zh'
+        } else if (lang.startsWith('id')) {
+          mappedLang = 'id'
+        }
+        currentProps.setGlobalState({ language: mappedLang })
+      }
+    }
+    window.addEventListener('qm:theme-changed', localThemeChangeHandler)
+    window.addEventListener('qm:lang-changed', localLangChangeHandler)
 
     const childApi = createChildApi()
     props.onChildReady?.(childApi)
@@ -189,6 +221,11 @@ export async function mount(props: QmProps = {}) {
   // 澶勭悊宓屽叆妯″紡
   if ((props as any).hideMenu && (props as any).embedded) {
     document.body.classList.add('embedded-mode')
+    // 设置 data 属性，支持样式隔离环境
+    const appContainer = document.querySelector('.qm-app')
+    if (appContainer) {
+      appContainer.setAttribute('data-embedded', 'true')
+    }
   }
 
   await render(props, true)
@@ -202,6 +239,14 @@ export async function unmount() {
   if (microHashChangeHandler) {
     window.removeEventListener('hashchange', microHashChangeHandler)
     microHashChangeHandler = null
+  }
+  if (localThemeChangeHandler) {
+    window.removeEventListener('qm:theme-changed', localThemeChangeHandler)
+    localThemeChangeHandler = null
+  }
+  if (localLangChangeHandler) {
+    window.removeEventListener('qm:lang-changed', localLangChangeHandler)
+    localLangChangeHandler = null
   }
   if (removeRouterAfterEach) {
     removeRouterAfterEach()

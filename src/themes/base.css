@@ -1,0 +1,20 @@
+/* 基础设计变量 - 跨主题通用 */
+
+:root {
+  /* 圆角 */
+  --radius-xl: 12px;
+
+  /* 字体 */
+  --font-size-xs: 12px;
+  --font-size-sm: 13px;
+  --font-size-lg: 18px;
+  --font-size-xl: 20px;
+
+  /* 过渡 */
+  --transition-fast: 0.15s;
+  --transition-base: 0.2s;
+  --transition-slow: 0.3s;
+
+  /* 阴影 */
+  --shadow-md: 0 4px 6px rgba(0, 0, 0, 0.1);
+}

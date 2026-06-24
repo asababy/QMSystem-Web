@@ -16,7 +16,6 @@
 
       <div class="main-content-row">
         <div class="filter-section">
-          <!-- 搜索面板 -->
           <JoSearchPanel
             ref="searchPanelRef"
             :fields="searchFields"
@@ -32,7 +31,6 @@
       </div>
 
       <div class="action-section">
-        <!-- 日期快捷键 -->
         <div class="date-shortcuts">
           <t-button
             v-for="shortcut in dateShortcuts"
@@ -84,12 +82,15 @@ import { ref, computed, onMounted } from 'vue'
 import { useI18n } from 'vue-i18n'
 import JoTable from '@/components/basic/table/JoTable.vue'
 import JoSearchPanel from '@/components/basic/search-panel/JoSearchPanel.vue'
-import HomeNavButton from '@/components/basic/HomeNavButton.vue'
-import { qmApi } from '@/api/modules'
-import type { JoTableColumn } from '@/components/basic/table/JoTable.vue'
-import type { SearchField } from '@/components/basic/search-panel/JoSearchPanel.vue'
+import HomeNavButton from '@/components/layout/HomeNavButton.vue'
+import { lmeReportApi } from './api'
+import { useTableColumns } from './table-config'
+import { useSearchFields } from './search-config'
+import type { LmeReportItem } from './types'
 
-const { t, locale } = useI18n()
+const { t } = useI18n()
+const { tableColumns, formatDateTime, getStatusClass } = useTableColumns()
+const { searchFields, dateShortcuts } = useSearchFields()
 
 const now = new Date()
 const currentYear = now.getFullYear()
@@ -105,87 +106,24 @@ const formatDate = (date: Date) => {
 }
 
 const startDate = ref(formatDate(firstDay))
-// 搜索字段配置
-const searchFields = computed<SearchField[]>(() => [
-  {
-    key: 'dateRange',
-    label: t('lmeReport.search.recordTime'),
-    type: 'date-range',
-    startPlaceholder: t('lmeReport.search.startDate'),
-    endPlaceholder: t('lmeReport.search.endDate')
-  },
-  {
-    key: 'orderNumber',
-    label: t('lmeReport.search.orderNumber'),
-    type: 'text',
-    placeholder: t('lmeReport.search.supportsFuzzy')
-  },
-  {
-    key: 'grade',
-    label: t('lmeReport.search.grade'),
-    type: 'text',
-    placeholder: t('lmeReport.search.supportsFuzzy')
-  },
-  {
-    key: 'lmeStatus',
-    label: t('lmeReport.search.lmeStatus'),
-    type: 'select',
-    options: [
-      { label: t('lmeReport.search.all'), value: '' },
-      { label: t('lmeReport.search.transmitted'), value: 'Success' },
-      { label: t('lmeReport.search.failed'), value: 'Failed' }
-    ]
-  }
-])
-
-// 搜索值
 const endDateForDisplay = ref(formatDate(lastDay))
 const searchValues = ref<Record<string, any>>({
   dateRange_start: startDate.value,
   dateRange_end: endDateForDisplay.value,
-  lmeStatus: 'Failed' // Default to 'Transmission failed'
+  lmeStatus: 'Failed',
 })
 const endDate = ref(formatDate(new Date(lastDay.getTime() + 24 * 60 * 60 * 1000)))
 const orderNumber = ref('')
 const grade = ref('')
 const lmeStatus = ref('')
-const rows = ref<any[]>([])
+const rows = ref<LmeReportItem[]>([])
 const loading = ref(false)
 const statusText = ref(String(t('common.ready')))
 const hasError = ref(false)
 const message = ref(String(t('lmeReport.defaultQuery', { start: startDate.value, end: endDateForDisplay.value })))
-
-// 搜索面板引用
 const searchPanelRef = ref<InstanceType<typeof JoSearchPanel>>()
-
-// 日期快捷键
-const dateShortcuts = computed(() => [
-  String(t('lmeReport.shortcuts.currentMonth')),
-  String(t('lmeReport.shortcuts.lastMonth')),
-  String(t('lmeReport.shortcuts.currentQuarter')),
-  String(t('lmeReport.shortcuts.lastQuarter')),
-  String(t('lmeReport.shortcuts.today')),
-  String(t('lmeReport.shortcuts.yesterday'))
-])
-
-// 表格列配置
-const tableColumns = computed<JoTableColumn[]>(() => [
-  { key: 'orderNumber', title: t('lmeReport.table.orderNumber'), sortable: true, filterable: true, filterPlaceholder: t('lmeReport.table.searchOrderNumber'), width: '140px' },
-  { key: 'grade', title: t('lmeReport.table.grade'), sortable: true, filterable: true, filterPlaceholder: t('lmeReport.table.searchGrade'), width: '90px' },
-  { key: 'totalPackages', title: t('lmeReport.table.totalPackages'), sortable: true, width: '90px' },
-  { key: 'totalWeight', title: t('lmeReport.table.totalWeight'), sortable: true, width: '90px' },
-  { key: 'lmeStatus', title: t('lmeReport.table.lmeStatus'), sortable: true, filterable: true, width: '100px' },
-  { key: 'createTime', title: t('lmeReport.table.createTime'), sortable: true, width: '160px' },
-  { key: 'syncTime', title: t('lmeReport.table.syncTime'), sortable: true, width: '160px' },
-  { key: 'syncUser', title: t('lmeReport.table.syncUser'), sortable: true, filterable: true, width: '100px' },
-  { key: 'lmeMessage', title: t('lmeReport.table.lmeMessage'), sortable: false, filterable: true, filterPlaceholder: t('common.search') }
-])
-
-// 表格引用
 const tableRef = ref<InstanceType<typeof JoTable>>()
 
-// 方法
-// 处理搜索
 function handleSearch(values: Record<string, any>) {
   if (values.dateRange_start) startDate.value = values.dateRange_start
   if (values.dateRange_end) {
@@ -197,40 +135,36 @@ function handleSearch(values: Record<string, any>) {
   orderNumber.value = values.orderNumber || ''
   grade.value = values.grade || ''
   lmeStatus.value = values.lmeStatus || ''
-  
   fetchData(false)
 }
 
-// 处理重置
 function handleReset() {
   const now = new Date()
   const currentYear = now.getFullYear()
   const currentMonth = now.getMonth()
   const firstDay = new Date(currentYear, currentMonth, 1)
   const lastDay = new Date(currentYear, currentMonth + 1, 0)
-  
+
   startDate.value = formatDate(firstDay)
   endDateForDisplay.value = formatDate(lastDay)
   endDate.value = formatDate(new Date(lastDay.getTime() + 24 * 60 * 60 * 1000))
   orderNumber.value = ''
   grade.value = ''
   lmeStatus.value = ''
-  
+
   tableRef.value?.reset()
-  
   rows.value = []
   statusText.value = String(t('common.ready'))
   message.value = String(t('lmeReport.resetDone'))
 }
 
-// 处理日期快捷键点击
 function handleDateShortcut(shortcut: string) {
   const now = new Date()
   const currentYear = now.getFullYear()
   const currentMonth = now.getMonth()
-  
+
   let firstDay: Date, lastDay: Date
-  
+
   switch (shortcut) {
     case t('lmeReport.shortcuts.today'):
       firstDay = new Date(now)
@@ -262,14 +196,13 @@ function handleDateShortcut(shortcut: string) {
     default:
       return
   }
-  
+
   const newValues = {
     ...searchValues.value,
     dateRange_start: formatDate(firstDay),
-    dateRange_end: formatDate(lastDay)
+    dateRange_end: formatDate(lastDay),
   }
   searchPanelRef.value?.setValues(newValues)
-  
   handleSearch(newValues)
 }
 
@@ -277,44 +210,40 @@ async function fetchData(isInitial: boolean) {
   loading.value = true
   hasError.value = false
   statusText.value = String(t('common.querying'))
-  
-  const params = new URLSearchParams()
-  if (startDate.value) params.append('startDate', startDate.value)
-  if (endDate.value) params.append('endDate', endDate.value)
-  if (orderNumber.value.trim()) params.append('orderNumber', orderNumber.value.trim())
-  if (grade.value.trim()) params.append('grade', grade.value.trim())
-  if (lmeStatus.value.trim()) params.append('lmeStatus', lmeStatus.value.trim())
-  
+
+  const params = {
+    startDate: startDate.value,
+    endDate: endDate.value,
+    orderNumber: orderNumber.value.trim(),
+    grade: grade.value.trim(),
+    lmeStatus: lmeStatus.value.trim(),
+  }
+
   const searchInfo = []
-  if (startDate.value && endDate.value) searchInfo.push(`时间范围：${startDate.value} ~ ${endDateForDisplay.value}`)
-  if (orderNumber.value.trim()) searchInfo.push(`单号：${orderNumber.value.trim()}`)
-  if (grade.value.trim()) searchInfo.push(`牌号：${grade.value.trim()}`)
-  if (lmeStatus.value.trim()) searchInfo.push(`状态：${lmeStatus.value.trim()}`)
-  
+  if (params.startDate && params.endDate) searchInfo.push(`时间范围：${params.startDate} ~ ${endDateForDisplay.value}`)
+  if (params.orderNumber) searchInfo.push(`单号：${params.orderNumber}`)
+  if (params.grade) searchInfo.push(`牌号：${params.grade}`)
+  if (params.lmeStatus) searchInfo.push(`状态：${params.lmeStatus}`)
+
   message.value = searchInfo.length > 0
     ? String(t('lmeReport.queryConditions', { conditions: searchInfo.join('，') }))
     : String(t('lmeReport.queryAll'))
 
   try {
-    const resp = await qmApi.getLmeReport(Object.fromEntries(params))
+    const resp = await lmeReportApi.getList(params)
 
     if (!resp.success) {
       throw new Error(resp.message || '查询失败')
     }
 
-    const json = resp.data
-    if (json) {
-      rows.value = json || []
-      statusText.value = String(t('common.queryDone'))
-      hasError.value = false
-      
-      const recordCount = json.length || 0
-      message.value = isInitial
-        ? String(t('lmeReport.defaultQueryDone', { count: recordCount }))
-        : String(t('lmeReport.queryDone', { count: recordCount }))
-    } else {
-      throw new Error(json.message || '查询失败')
-    }
+    rows.value = resp.data || []
+    statusText.value = String(t('common.queryDone'))
+    hasError.value = false
+
+    const recordCount = rows.value.length
+    message.value = isInitial
+      ? String(t('lmeReport.defaultQueryDone', { count: recordCount }))
+      : String(t('lmeReport.queryDone', { count: recordCount }))
   } catch (error) {
     console.error('查询失败:', error)
     statusText.value = String(t('common.queryFailed'))
@@ -329,46 +258,29 @@ function onTableSortChange(field: string, order: 'asc' | 'desc') {
   console.log(`排序: ${field} ${order}`)
 }
 
-function formatDateTime(dateStr: string) {
-  if (!dateStr) return '-'
-  const date = new Date(dateStr)
-  return date.toLocaleString(locale.value === 'en-US' ? 'en-US' : 'zh-CN')
-}
-
-function getStatusClass(status: string) {
-  if (status === '已传输' || status === '成功') return 'text-success'
-  if (status === '传输失败' || status === '失败') return 'text-error'
-  return ''
-}
-
-// 生命周期
 onMounted(() => {
   const params = new URLSearchParams(window.location.search)
   const auto = params.get('auto') === '1' || params.get('autoQuery') === '1'
 
-  // Sync initial searchValues to individual variables
   handleSearch(searchValues.value)
 
   if (auto) {
     fetchData(true)
   } else {
-    // Default load data once
     fetchData(true)
   }
 })
 </script>
 
-<style scoped>
+<style scoped lang="scss">
 .page {
-  max-width: 1200px;
-  margin: 0 auto;
   padding: 24px;
 }
 
 .card {
-  background: #fff;
-  border-radius: 8px;
-  box-shadow: 0 4px 12px rgba(15, 23, 42, 0.06);
+  background: var(--card-bg);
+  border-radius: var(--radius-lg);
+  box-shadow: var(--shadow-md);
   padding: 20px 24px 24px;
 }
 
@@ -376,41 +288,43 @@ onMounted(() => {
   display: flex;
   justify-content: space-between;
   align-items: center;
+  margin-bottom: 20px;
+
+  h1 {
+    font-size: var(--font-size-xl);
+    font-weight: 600;
+    color: var(--text-main);
+    margin: 0;
+  }
+
+  .subtitle {
+    font-size: var(--font-size-sm);
+    color: var(--text-dim);
+    margin-top: 4px;
+  }
 }
 
 .title-actions {
   display: flex;
   align-items: center;
-  gap: 10px;
-}
-
-.title-row h1 {
-  margin: 0;
-  font-size: 24px;
-  font-weight: 700;
-  color: #1f2937;
-}
-
-.subtitle {
-  color: #6b7280;
-  font-size: 14px;
-  margin-top: 4px;
+  gap: 12px;
 }
 
 .status-badge {
-  padding: 2px 8px;
-  border-radius: 999px;
-  font-size: 12px;
-}
+  padding: 4px 12px;
+  border-radius: var(--radius-xl);
+  font-size: var(--font-size-xs);
+  font-weight: 500;
 
-.status-ok {
-  background: #ecfdf3;
-  color: #166534;
-}
+  &.status-ok {
+    background: var(--color-success-light);
+    color: var(--color-success-dark);
+  }
 
-.status-error {
-  background: #fef2f2;
-  color: #b91c1c;
+  &.status-error {
+    background: var(--color-danger-light);
+    color: var(--color-danger-dark);
+  }
 }
 
 .main-content-row {
@@ -438,19 +352,19 @@ onMounted(() => {
   display: flex;
   justify-content: space-between;
   align-items: center;
-  border-radius: 6px;
-  font-size: 12px;
-  color: #64748b;
+  border-radius: var(--radius-md);
+  font-size: var(--font-size-sm);
+  color: var(--text-dim);
   margin-bottom: 12px;
 }
 
 .text-success {
-  color: #16a34a;
+  color: var(--color-success);
   font-weight: 500;
 }
 
 .text-error {
-  color: #dc2626;
+  color: var(--color-danger);
   font-weight: 500;
 }
 </style>
