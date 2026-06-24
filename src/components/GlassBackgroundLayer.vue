@@ -12,7 +12,7 @@
 
 <script setup lang="ts">
 // 玻璃拟态背景层组件
-// 基于 mkvideo_app 的设计风格
+// 基于 MapaSystem 的设计风格
 </script>
 
 <style scoped>

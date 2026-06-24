@@ -51,31 +51,24 @@ npm run build
 
 ## 🔧 架构特点
 
-### 源码保护
-- `QMSystem-UI/` 存放 Vue 源码（开发环境）
-- `WebPages/` 只存放编译产物（生产环境）
-- 发布时可删除 `QMSystem-UI/`，保护源码
+### 微前端接入
+- 作为 **qiankun 子应用** 挂载至底座系统。
+- 生产环境构建基础路径 (`base`) 设置为 `/qm/`，编译产物自动归档于 `QMSystem/WebPages/`，再由宿主动态托管。
+- 微前端模式下使用 `memory history` 路由，并在 `hashchange` 事件中与主应用保持 hash 同步。
 
-### 自动化构建
-- VS 中点击"启动"时自动构建前端
-- MSBuild 预构建指令确保前端始终最新
+### 路由与菜单自动上报
+- 路由定义于 `src/router/qms_menu.json`，子应用挂载时会自动将路由表上报给主框架，由主框架动态组装并渲染左侧导航。
+- 去除了硬编码的旧前缀（如 `/quality/`），路由规则独立解耦。
 
-### 业务系统集成
-- 动态路由：`/modules/:system/:page`
-- iframe 容器：统一的业务页面布局
-- 静态文件服务：优先从文件系统提供业务页面
+### 多语言联动同步
+- 监听 `props.onGlobalStateChange` 状态，当主应用切换语言（zh / en）时，实时调用 `setLanguage` 进行 locale 的同步切换，无需刷新。
 
 ## 📝 开发规范
 
-### 添加新页面
-1. 在 `src/views/` 创建 Vue 组件
-2. 在 `src/main.js` 添加路由
-3. 运行 `npm run build` 更新生产文件
-
-### 添加业务系统
-1. 在 `QMSystem/WebPages/modules/` 创建业务系统目录
-2. 放入 HTML 文件
-3. 访问：`/modules/{system}/{page}`
+### 添加新页面与路由
+1. 在 `src/views/` 下编写新的业务 Vue 组件。
+2. 在 `src/router/qms_menu.json` 中配置对应的路由与菜单元数据（如 `title`，`iconClass`，`order` 等）。
+3. 运行 `npm run build` 更新生产文件。
 
 ### 样式规范
 - 使用 Composition API

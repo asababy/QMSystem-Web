@@ -728,7 +728,7 @@ async function loadSelectedOrderDetails() {
       
       try {
         // 使用批量查询接口
-        const resp = await qmApi.getQualityReportBatchDetails({ orderIds: batch })
+        const resp = await qmApi.getQualityReportBatchDetails(batch)
         
         if (resp.success && resp.data && resp.data.details) {
           // 立即显示这批数据

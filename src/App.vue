@@ -146,10 +146,15 @@ body.embedded-mode .qm-app .main-content {
   margin-left: 0 !important;
   margin-top: 0 !important;
   padding: 1rem !important;
-  height: 100vh !important;
+  height: 100% !important;
+  min-height: 0 !important;
 }
 
 body.embedded-mode .qm-app {
   background: #ffffff !important;
+}
+
+body.embedded-mode .glass-background-layer {
+  display: none !important;
 }
 </style>

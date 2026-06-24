@@ -1,7 +1,8 @@
-import { createApp, type App as VueApp, nextTick } from 'vue'
+﻿import { createApp, type App as VueApp, nextTick } from 'vue'
 import { createPinia } from 'pinia'
 import TDesign from 'tdesign-vue-next'
 import 'tdesign-vue-next/es/style/index.css'
+import '@jovue/ui/style.css'
 import App from './App.vue'
 import { createQmRouter, getQmMenuRoutes } from './router'
 import { getApiList } from './api/registry'
@@ -25,7 +26,7 @@ type QmProps = QmContext & {
   onLogout?: () => void
   onNotify?: (message: string, level?: string, title?: string) => void
   onGlobalStateChange?: (
-    callback: (state: { locale?: string }, prevState: { locale?: string }) => void,
+    callback: (state: { locale?: string; language?: string }, prevState: { locale?: string; language?: string }) => void,
     fireImmediately?: boolean
   ) => void
   offGlobalStateChange?: () => void
@@ -52,15 +53,17 @@ let removeRouterAfterEach: (() => void) | null = null
 let offGlobalStateChangeHandler: (() => void) | null = null
 let currentProps: QmProps = {}
 
+const DEFAULT_HOME_PATH = '/home'
+
 const normalizeRoutePath = (path?: string): string => {
-  if (!path) return '/quality/qmshome'
+  if (!path) return DEFAULT_HOME_PATH
   return path.startsWith('/') ? path : `/${path}`
 }
 
 const getPathFromHostHash = (): string => {
   const hash = window.location.hash || ''
   const qmPrefix = '#/qm'
-  if (!hash.startsWith(qmPrefix)) return '/quality/qmshome'
+  if (!hash.startsWith(qmPrefix)) return DEFAULT_HOME_PATH
   return normalizeRoutePath(hash.slice(qmPrefix.length))
 }
 
@@ -86,7 +89,7 @@ const bindBridge = (props: QmProps = {}) => {
   window.qmBridge = {
     navigateHome: () => props.onNavigateHome?.(),
     navigate: (path: string) => props.onNavigate?.(path),
-    getCurrentRoute: () => router?.currentRoute.value.fullPath || '/quality/qmshome',
+    getCurrentRoute: () => router?.currentRoute.value.fullPath || DEFAULT_HOME_PATH,
     logout: () => props.onLogout?.(),
     notify: (message: string, level: string = 'info', title = String(i18n.global.t('app.notifyTitle'))) =>
       props.onNotify?.(message, level, title),
@@ -95,7 +98,7 @@ const bindBridge = (props: QmProps = {}) => {
 
 const createChildApi = (): QmChildApi => ({
   getMenu: () => getQmMenuRoutes(),
-  getCurrentRoute: () => router?.currentRoute.value.fullPath || '/quality/qmshome',
+  getCurrentRoute: () => router?.currentRoute.value.fullPath || DEFAULT_HOME_PATH,
   navigate: (path: string) => {
     const nextPath = normalizeRoutePath(path)
     void router?.replace(nextPath)
@@ -131,12 +134,12 @@ const render = async (props: QmProps = {}, isMicro = false) => {
   bindBridge(currentProps)
   applyContext(props)
 
-  // 等待路由挂载完成后再导航
+  // 绛夊緟璺敱鎸傝浇瀹屾垚鍚庡啀瀵艰埅
   await nextTick()
   const targetPath = isMicro ? getPathFromHostHash() : normalizeRoutePath(props.initialPath)
   await router.replace(targetPath)
 
-  // 微前端模式下：主应用 hash 变化时，同步子应用 memory 路由
+  // 寰墠绔ā寮忎笅锛氫富搴旂敤 hash 鍙樺寲鏃讹紝鍚屾瀛愬簲鐢?memory 璺敱
   if (isMicro) {
     const syncFromHostHash = async () => {
       if (!router) return
@@ -156,15 +159,15 @@ const render = async (props: QmProps = {}, isMicro = false) => {
     }
 
     window.addEventListener('hashchange', microHashChangeHandler)
-    // 首次挂载立即同步一次，覆盖“直接输入地址”不触发 hashchange 的场景
-    await syncFromHostHash()
+    // 棣栨鎸傝浇绔嬪嵆鍚屾涓€娆★紝瑕嗙洊鈥滅洿鎺ヨ緭鍏ュ湴鍧€鈥濅笉瑙﹀彂 hashchange 鐨勫満鏅?    await syncFromHostHash()
   }
 
   if (isMicro) {
     if (typeof props.onGlobalStateChange === 'function') {
       props.onGlobalStateChange((state) => {
-        if (state?.locale) {
-          setLanguage(state.locale)
+        const lang = state?.language || state?.locale
+        if (lang) {
+          setLanguage(lang)
         }
       }, true)
       offGlobalStateChangeHandler = () => {
@@ -179,22 +182,22 @@ const render = async (props: QmProps = {}, isMicro = false) => {
 }
 
 export async function bootstrap() {
-  // no-op, reserved for qiankun lifecycle
+  // reserved for qiankun lifecycle
 }
 
 export async function mount(props: QmProps = {}) {
-  // 处理嵌入模式
+  // 澶勭悊宓屽叆妯″紡
   if ((props as any).hideMenu && (props as any).embedded) {
     document.body.classList.add('embedded-mode')
   }
-  
+
   await render(props, true)
 }
 
 export async function unmount() {
-  // 移除嵌入模式样式
+  // 绉婚櫎宓屽叆妯″紡鏍峰紡
   document.body.classList.remove('embedded-mode')
-  
+
   if (!app) return
   if (microHashChangeHandler) {
     window.removeEventListener('hashchange', microHashChangeHandler)
@@ -232,15 +235,18 @@ export async function update(props: QmProps = {}) {
   }
 }
 
-if (!(window as any).__POWERED_BY_QIANKUN__) {
+// vite-plugin-qiankun 鐢熷懡鍛ㄦ湡娉ㄥ唽锛堝紑鍙戞ā寮?ESM 鍏煎 + 鐢熶骇妯″紡閫氱敤锛塦r
+import { renderWithQiankun, qiankunWindow } from 'vite-plugin-qiankun/dist/helper'
+
+renderWithQiankun({
+  bootstrap,
+  mount,
+  unmount,
+  update,
+})
+
+// 鐙珛杩愯妯″紡锛堥潪 qiankun 鍔犺浇鏃剁洿鎺ユ覆鏌擄級
+if (!qiankunWindow.__POWERED_BY_QIANKUN__) {
   render({}, false)
 }
 
-// qiankun 生命周期导出
-;(window as any).__POWERED_BY_QIANKUN__ = true
-;(window as any).bootstrap = bootstrap
-;(window as any).mount = mount
-;(window as any).unmount = unmount
-;(window as any).update = update
-// 兼容 qiankun 对子应用 name 对应全局导出的生命周期探测
-;(window as any)['qm-system'] = { bootstrap, mount, unmount, update }

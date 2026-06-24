@@ -1,7 +1,7 @@
 <template>
   <div class="portal-home">
     <GlassBackgroundLayer />
-    
+
     <div class="portal-container">
       <header class="portal-header">
         <GlassCard :padding="0" :border-radius="20" class="header-content">
@@ -16,7 +16,7 @@
               </div>
             </div>
           </div>
-          
+
           <div class="header-right">
             <div class="user-section">
               <t-dropdown trigger="click" :popup-props="{ overlayClassName: 'user-dropdown-popover' }">
@@ -28,12 +28,17 @@
                   <t-icon name="chevron-down" size="16" />
                 </t-button>
                 <t-dropdown-menu>
-                  <t-dropdown-item @click="handleProfile"><t-icon name="user-circle" /> {{ t('home.profile') }}</t-dropdown-item>
-                  <t-dropdown-item @click="handleSettings"><t-icon name="setting" /> {{ t('home.settings') }}</t-dropdown-item>
-                  <t-dropdown-item @click="handleLanguageSwitch('zh-CN')"><t-icon name="translate-1" /> {{ t('common.chinese') }}</t-dropdown-item>
-                  <t-dropdown-item @click="handleLanguageSwitch('en-US')"><t-icon name="translate-1" /> {{ t('common.english') }}</t-dropdown-item>
+                  <t-dropdown-item @click="handleProfile"><t-icon name="user-circle" /> {{ t('home.profile')
+                    }}</t-dropdown-item>
+                  <t-dropdown-item @click="handleSettings"><t-icon name="setting" /> {{ t('home.settings')
+                    }}</t-dropdown-item>
+                  <t-dropdown-item @click="handleLanguageSwitch('zh-CN')"><t-icon name="translate-1" /> {{
+                    t('common.chinese') }}</t-dropdown-item>
+                  <t-dropdown-item @click="handleLanguageSwitch('en-US')"><t-icon name="translate-1" /> {{
+                    t('common.english') }}</t-dropdown-item>
                   <t-dropdown-item divider />
-                  <t-dropdown-item @click="handleLogout"><t-icon name="logout" /> {{ t('home.logout') }}</t-dropdown-item>
+                  <t-dropdown-item @click="handleLogout"><t-icon name="logout" /> {{ t('home.logout')
+                    }}</t-dropdown-item>
                 </t-dropdown-menu>
               </t-dropdown>
             </div>
@@ -48,14 +53,10 @@
             <h2 class="section-title">{{ t('home.quickNav') }}</h2>
             <p class="section-subtitle">{{ t('home.quickNavSub') }}</p>
           </div>
-          
+
           <div class="nav-grid">
-            <GlassCard 
-              v-for="item in navigationItems"
-              :key="item.id"
-              :class="['nav-card', `nav-card-${item.size}`]"
-              @click="navigateTo(item.path)"
-            >
+            <GlassCard v-for="item in navigationItems" :key="item.id" :class="['nav-card', `nav-card-${item.size}`]"
+              @click="navigateTo(item.path)">
               <div class="nav-card-content">
                 <div class="nav-icon" :style="{ background: item.iconGradient }">
                   <t-icon :name="item.icon" size="32" color="white" />
@@ -86,12 +87,8 @@
 
           <GlassCard class="portal-nav-card" :padding="24">
             <div class="group-tabs-wrapper">
-              <div 
-                v-for="group in menuGroups" 
-                :key="group.name"
-                :class="['group-tab-item', { active: activeGroup === group.name }]"
-                @click="switchGroup(group.name)"
-              >
+              <div v-for="group in menuGroups" :key="group.name"
+                :class="['group-tab-item', { active: activeGroup === group.name }]" @click="switchGroup(group.name)">
                 <span class="tab-label">{{ group.label }}</span>
                 <div class="tab-underline"></div>
               </div>
@@ -99,12 +96,8 @@
 
             <transition name="fade-slide" mode="out-in">
               <div class="portal-grid" :key="activeGroup">
-                <div 
-                  v-for="item in currentGroupItems" 
-                  :key="item.path"
-                  class="portal-item-card"
-                  @click="navigateTo(item.path)"
-                >
+                <div v-for="item in currentGroupItems" :key="item.path" class="portal-item-card"
+                  @click="navigateTo(item.path)">
                   <div class="portal-item-icon" :style="{ background: item.iconGradient }">
                     <t-icon :name="item.icon" size="24" color="white" />
                   </div>
@@ -168,23 +161,12 @@
     </div>
 
     <!-- 用户登录活动抽屉 -->
-    <t-drawer
-      v-model:visible="activityDrawerVisible"
-      :header="t('home.userActivityTitle') || '用户登录记录'"
-      :footer="false"
-      size="400px"
-      :close-on-overlay-click="true"
-      @close="stopActivitiesAutoRefresh"
-    >
+    <t-drawer v-model:visible="activityDrawerVisible" :header="t('home.userActivityTitle') || '用户登录记录'" :footer="false"
+      size="400px" :close-on-overlay-click="true" @close="stopActivitiesAutoRefresh">
       <div class="activity-drawer-content">
         <!-- 刷新按钮 -->
         <div class="drawer-toolbar">
-          <t-button 
-            size="small" 
-            variant="outline"
-            :loading="isRefreshingActivities"
-            @click="refreshActivities"
-          >
+          <t-button size="small" variant="outline" :loading="isRefreshingActivities" @click="refreshActivities">
             <t-icon name="refresh" :class="{ 'spin-animation': isRefreshingActivities }" />
             {{ isRefreshingActivities ? (t('home.refreshing') || '刷新中...') : (t('home.manualRefresh') || '手动刷新') }}
           </t-button>
@@ -193,11 +175,7 @@
 
         <!-- 用户列表 -->
         <div class="user-activity-list">
-          <div 
-            v-for="user in userActivities" 
-            :key="user.id"
-            class="user-activity-item"
-          >
+          <div v-for="user in userActivities" :key="user.id" class="user-activity-item">
             <div class="user-avatar-wrapper">
               <t-avatar size="40" :image="user.avatar">
                 {{ user.realName?.charAt(0) || user.username.charAt(0) }}
@@ -267,7 +245,7 @@ const initWebSocket = () => {
   socket.value.onmessage = (e: MessageEvent) => {
     const msg = JSON.parse(e.data)
     if (msg.time) lastUpdated.value = msg.time
-    
+
     // 处理系统健康状态
     if (msg.type === 'systemHealth' && msg.data) {
       Object.keys(msg.data).forEach(key => {
@@ -288,7 +266,7 @@ const navigationItems = computed(() => ([
     title: t('home.nav.reportTitle'),
     description: t('home.nav.reportDesc'),
     icon: 'chart-line',
-    path: '/quality/report',
+    path: '/report/coa',
     size: 'large',
     iconGradient: 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)',
     stats: [
@@ -301,7 +279,7 @@ const navigationItems = computed(() => ([
     title: t('home.nav.inspectionTitle'),
     description: t('home.nav.inspectionDesc'),
     icon: 'search',
-    path: '/quality/inspection',
+    path: '/inspection',
     size: 'normal',
     iconGradient: 'linear-gradient(135deg, #f093fb 0%, #f5576c 100%)'
   },
@@ -310,7 +288,7 @@ const navigationItems = computed(() => ([
     title: t('home.nav.analyticsTitle'),
     description: t('home.nav.analyticsDesc'),
     icon: 'pie-chart',
-    path: '/quality/analytics',
+    path: '/analytics',
     size: 'normal',
     iconGradient: 'linear-gradient(135deg, #4facfe 0%, #00f2fe 100%)'
   },
@@ -319,7 +297,7 @@ const navigationItems = computed(() => ([
     title: t('home.nav.standardsTitle'),
     description: t('home.nav.standardsDesc'),
     icon: 'book',
-    path: '/quality/standards',
+    path: '/standards',
     size: 'normal',
     iconGradient: 'linear-gradient(135deg, #43e97b 0%, #38f9d7 100%)'
   },
@@ -328,7 +306,7 @@ const navigationItems = computed(() => ([
     title: t('home.nav.equipmentTitle'),
     description: t('home.nav.equipmentDesc'),
     icon: 'setting',
-    path: '/quality/equipment',
+    path: '/equipment',
     size: 'normal',
     iconGradient: 'linear-gradient(135deg, #fa709a 0%, #fee140 100%)'
   },
@@ -337,7 +315,7 @@ const navigationItems = computed(() => ([
     title: t('home.nav.usersTitle'),
     description: t('home.nav.usersDesc'),
     icon: 'user',
-    path: '/quality/users',
+    path: '/users',
     size: 'normal',
     iconGradient: 'linear-gradient(135deg, #30cfd0 0%, #330867 100%)'
   }
@@ -377,7 +355,7 @@ const menuGroups = computed(() => {
     // 递归处理子路由
     const processRoute = (route: any, parentPath: string = '') => {
       const fullPath = route.path.startsWith('/') ? route.path : `${parentPath}/${route.path}`
-      
+
       if (route.meta?.elmenuitemgroup) {
         const gName = route.meta.elmenuitemgroup
         if (!groupsMap[gName]) {
@@ -389,7 +367,7 @@ const menuGroups = computed(() => {
           }
           colorIdx++
         }
-        
+
         groupsMap[gName].items.push({
           title: route.meta.title || route.name,
           description: `${route.meta.title || ''} ${t('home.groupDescSuffix')}`,
@@ -464,9 +442,9 @@ const refreshActivities = async () => {
       { id: '4', username: 'wangwu', realName: '王五', lastLoginTime: new Date(Date.now() - 2 * 60 * 60 * 1000).toISOString(), isOnline: false, ip: '192.168.1.103' },
       { id: '5', username: 'zhaoliu', realName: '赵六', lastLoginTime: new Date(Date.now() - 24 * 60 * 60 * 1000).toISOString(), isOnline: false, ip: '192.168.1.104' }
     ]
-    
+
     // 按登录时间倒序排列
-    userActivities.value = mockData.sort((a, b) => 
+    userActivities.value = mockData.sort((a, b) =>
       new Date(b.lastLoginTime).getTime() - new Date(a.lastLoginTime).getTime()
     )
   } finally {
@@ -500,7 +478,7 @@ const formatTime = (timeStr: string) => {
   const date = new Date(timeStr)
   const now = new Date()
   const diff = now.getTime() - date.getTime()
-  
+
   if (diff < 60000) return '刚刚'
   if (diff < 3600000) return `${Math.floor(diff / 60000)}分钟前`
   if (diff < 86400000) return `${Math.floor(diff / 3600000)}小时前`
@@ -570,7 +548,7 @@ onMounted(() => {
   syncUser()
   initWebSocket()
   startActivitiesAutoRefresh()
-  
+
   // 默认选中第一个 Tab
   if (menuGroups.value.length > 0) {
     activeGroup.value = menuGroups.value[0].name
@@ -587,7 +565,7 @@ onUnmounted(() => {
 <style scoped>
 .portal-home {
   position: relative;
-  min-height: 100vh;
+  min-height: 100%;
   width: 100%;
   padding-bottom: 40px;
 }
@@ -623,7 +601,7 @@ onUnmounted(() => {
 /* 快速导航网格 */
 .nav-grid {
   display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(320px, 1fr));
+  grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
   gap: 20px;
   margin-bottom: 32px;
 }
@@ -708,7 +686,10 @@ onUnmounted(() => {
 }
 
 /* Header */
-.portal-header { margin-bottom: 32px; }
+.portal-header {
+  margin-bottom: 32px;
+}
+
 .header-content {
   width: 100%;
 }
@@ -723,25 +704,53 @@ onUnmounted(() => {
 }
 
 .header-left {
-  display: flex; 
-  align-items: center; 
+  display: flex;
+  align-items: center;
   flex: 1;
   min-width: 0;
 }
+
 .header-right {
-  display: flex; 
-  align-items: center; 
+  display: flex;
+  align-items: center;
   flex-shrink: 0;
 }
-.logo-section { display: flex; align-items: center; gap: 16px; }
-.logo-icon {
-  width: 48px; height: 48px; border-radius: 12px;
-  background: linear-gradient(135deg, #7c6cf0 0%, #7eb6ff 100%);
-  display: flex; align-items: center; justify-content: center; color: white;
+
+.logo-section {
+  display: flex;
+  align-items: center;
+  gap: 16px;
 }
-.portal-title { font-size: 22px; font-weight: 700; color: #1d1b4b; margin: 0; }
-.portal-subtitle { font-size: 12px; color: rgba(29, 27, 75, 0.5); margin: 0; }
-.user-section { display: flex; align-items: center; }
+
+.logo-icon {
+  width: 48px;
+  height: 48px;
+  border-radius: 12px;
+  background: linear-gradient(135deg, #7c6cf0 0%, #7eb6ff 100%);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: white;
+}
+
+.portal-title {
+  font-size: 22px;
+  font-weight: 700;
+  color: #1d1b4b;
+  margin: 0;
+}
+
+.portal-subtitle {
+  font-size: 12px;
+  color: rgba(29, 27, 75, 0.5);
+  margin: 0;
+}
+
+.user-section {
+  display: flex;
+  align-items: center;
+}
+
 .user-btn {
   display: flex;
   align-items: center;
@@ -750,7 +759,12 @@ onUnmounted(() => {
   padding: 4px 8px;
   min-height: 36px;
 }
-.username { font-size: 14px; font-weight: 500; color: #1d1b4b; }
+
+.username {
+  font-size: 14px;
+  font-weight: 500;
+  color: #1d1b4b;
+}
 
 /* 用户下拉菜单尺寸收敛 */
 :deep(.user-dropdown-popover .t-dropdown__menu) {
@@ -770,84 +784,206 @@ onUnmounted(() => {
   font-size: 14px;
 }
 
-/* 业务导航 Tab 样式 (还原截图效果) */
-.portal-nav-card { margin-bottom: 32px; border: 1px solid rgba(255, 255, 255, 0.4); }
+/* 业务导航 Tab 样式 */
+.portal-nav-card {
+  margin-bottom: 32px;
+  border: 1px solid rgba(255, 255, 255, 0.4);
+}
 
 .group-tabs-wrapper {
-  display: flex; gap: 32px; border-bottom: 1px solid rgba(29, 27, 75, 0.08);
-  margin-bottom: 24px; overflow-x: auto;
+  display: flex;
+  gap: 32px;
+  border-bottom: 1px solid rgba(29, 27, 75, 0.08);
+  margin-bottom: 24px;
+  overflow-x: auto;
 }
 
 .group-tab-item {
-  position: relative; padding: 12px 4px; cursor: pointer; transition: all 0.3s;
+  position: relative;
+  padding: 12px 4px;
+  cursor: pointer;
+  transition: all 0.3s;
 }
 
-.tab-label { font-size: 16px; font-weight: 500; color: rgba(29, 27, 75, 0.6); }
+.tab-label {
+  font-size: 16px;
+  font-weight: 500;
+  color: rgba(29, 27, 75, 0.6);
+}
 
-.group-tab-item.active .tab-label { color: #0052d9; font-weight: 700; }
+.group-tab-item.active .tab-label {
+  color: #0052d9;
+  font-weight: 700;
+}
 
 .tab-underline {
-  position: absolute; bottom: 0; left: 0; width: 0; height: 3px;
-  background: #0052d9; border-radius: 2px; transition: width 0.3s;
+  position: absolute;
+  bottom: 0;
+  left: 0;
+  width: 0;
+  height: 3px;
+  background: #0052d9;
+  border-radius: 2px;
+  transition: width 0.3s;
 }
 
-.group-tab-item.active .tab-underline { width: 100%; }
+.group-tab-item.active .tab-underline {
+  width: 100%;
+}
 
 /* 卡片网格 */
 .portal-grid {
-  display: grid; grid-template-columns: repeat(auto-fill, minmax(300px, 1fr)); gap: 20px;
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
+  gap: 20px;
 }
 
 .portal-item-card {
-  display: flex; align-items: center; padding: 20px;
-  background: rgba(255, 255, 255, 0.3); border: 1px solid rgba(255, 255, 255, 0.5);
-  border-radius: 16px; cursor: pointer; transition: all 0.3s ease;
+  display: flex;
+  align-items: center;
+  padding: 20px;
+  background: rgba(255, 255, 255, 0.3);
+  border: 1px solid rgba(255, 255, 255, 0.5);
+  border-radius: 16px;
+  cursor: pointer;
+  transition: all 0.3s ease;
 }
 
 .portal-item-card:hover {
-  background: white; transform: translateY(-4px);
-  box-shadow: 0 12px 30px rgba(29, 27, 75, 0.1); border-color: #0052d9;
+  background: white;
+  transform: translateY(-4px);
+  box-shadow: 0 12px 30px rgba(29, 27, 75, 0.1);
+  border-color: #0052d9;
 }
 
 .portal-item-icon {
-  width: 52px; height: 52px; border-radius: 12px; display: flex;
-  align-items: center; justify-content: center; margin-right: 16px; flex-shrink: 0;
+  width: 52px;
+  height: 52px;
+  border-radius: 12px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  margin-right: 16px;
+  flex-shrink: 0;
 }
 
-.portal-item-info { flex: 1; overflow: hidden; }
-.portal-item-title { font-size: 16px; font-weight: 600; color: #1d1b4b; margin: 0 0 4px 0; }
-.portal-item-desc { font-size: 12px; color: rgba(29, 27, 75, 0.5); margin: 0; text-overflow: ellipsis; white-space: nowrap; overflow: hidden; }
+.portal-item-info {
+  flex: 1;
+  overflow: hidden;
+}
 
-.arrow-icon { color: rgba(29, 27, 75, 0.3); opacity: 0; transition: 0.3s; }
-.portal-item-card:hover .arrow-icon { opacity: 1; transform: translateX(5px); }
+.portal-item-title {
+  font-size: 16px;
+  font-weight: 600;
+  color: #1d1b4b;
+  margin: 0 0 4px 0;
+}
+
+.portal-item-desc {
+  font-size: 12px;
+  color: rgba(29, 27, 75, 0.5);
+  margin: 0;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  overflow: hidden;
+}
+
+.arrow-icon {
+  color: rgba(29, 27, 75, 0.3);
+  opacity: 0;
+  transition: 0.3s;
+}
+
+.portal-item-card:hover .arrow-icon {
+  opacity: 1;
+  transform: translateX(5px);
+}
 
 /* 其他区块布局 */
-.dashboard-row { display: grid; grid-template-columns: 3fr 2fr; gap: 32px; }
-
-.status-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; margin-top: 16px; }
-.status-item {
-  display: flex; align-items: center; gap: 12px; padding: 16px;
-  background: rgba(255, 255, 255, 0.4); border-radius: 12px; border: 1px solid rgba(255, 255, 255, 0.4);
+.dashboard-row {
+  display: grid;
+  grid-template-columns: 3fr 2fr;
+  gap: 32px;
 }
 
-.status-icon { width: 40px; height: 40px; border-radius: 10px; display: flex; align-items: center; justify-content: center; color: white; }
-.status-icon.online { background: linear-gradient(135deg, #10b981 0%, #059669 100%); }
-.status-icon.warning { background: linear-gradient(135deg, #f59e0b 0%, #d97706 100%); }
-.status-icon.offline { background: linear-gradient(135deg, #ef4444 0%, #dc2626 100%); }
+.status-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 16px;
+  margin-top: 16px;
+}
 
-.status-indicator.offline { color: #ef4444; }
-.status-indicator.offline .status-dot { background: #ef4444; }
+.status-item {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 16px;
+  background: rgba(255, 255, 255, 0.4);
+  border-radius: 12px;
+  border: 1px solid rgba(255, 255, 255, 0.4);
+}
 
-.activity-list { display: flex; flex-direction: column; gap: 12px; margin-top: 16px; }
+.status-icon {
+  width: 40px;
+  height: 40px;
+  border-radius: 10px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: white;
+}
+
+.status-icon.online {
+  background: linear-gradient(135deg, #10b981 0%, #059669 100%);
+}
+
+.status-icon.warning {
+  background: linear-gradient(135deg, #f59e0b 0%, #d97706 100%);
+}
+
+.status-icon.offline {
+  background: linear-gradient(135deg, #ef4444 0%, #dc2626 100%);
+}
+
+.status-indicator.offline {
+  color: #ef4444;
+}
+
+.status-indicator.offline .status-dot {
+  background: #ef4444;
+}
+
+.activity-list {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  margin-top: 16px;
+}
+
 .activity-item {
-  display: flex; align-items: center; gap: 12px; padding: 12px;
-  background: rgba(255, 255, 255, 0.2); border-radius: 10px;
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 12px;
+  background: rgba(255, 255, 255, 0.2);
+  border-radius: 10px;
 }
 
 /* 动画 */
-.fade-slide-enter-active, .fade-slide-leave-active { transition: all 0.3s ease; }
-.fade-slide-enter-from { opacity: 0; transform: translateY(10px); }
-.fade-slide-leave-to { opacity: 0; transform: translateY(-10px); }
+.fade-slide-enter-active,
+.fade-slide-leave-active {
+  transition: all 0.3s ease;
+}
+
+.fade-slide-enter-from {
+  opacity: 0;
+  transform: translateY(10px);
+}
+
+.fade-slide-leave-to {
+  opacity: 0;
+  transform: translateY(-10px);
+}
 
 /* 用户活动抽屉样式 */
 .activity-drawer-content {
@@ -873,8 +1009,13 @@ onUnmounted(() => {
 }
 
 @keyframes spin {
-  from { transform: rotate(0deg); }
-  to { transform: rotate(360deg); }
+  from {
+    transform: rotate(0deg);
+  }
+
+  to {
+    transform: rotate(360deg);
+  }
 }
 
 .user-activity-list {
@@ -992,6 +1133,8 @@ onUnmounted(() => {
 }
 
 @media (max-width: 1024px) {
-  .dashboard-row { grid-template-columns: 1fr; }
+  .dashboard-row {
+    grid-template-columns: 1fr;
+  }
 }
 </style>

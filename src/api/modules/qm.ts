@@ -29,8 +29,8 @@ export const qmApi = {
   /**
    * 批量获取质量报告详情
    */
-  getQualityReportBatchDetails: (data: QualityReportBatchRequest) =>
-    $post('qm/quality-report/details/batch', data),
+  getQualityReportBatchDetails: (orderNumbers: string[]) =>
+    $post('qm/quality-report/details/batch', orderNumbers),
 
   /**
    * 预览质量报告PDF

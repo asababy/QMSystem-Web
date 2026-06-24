@@ -43,6 +43,8 @@ const normalizeJsonRoutes = (routes: JsonRoute[]): RouteRecordRaw[] => {
 // QM 系统基础路由（JSON 配置）
 const qmBaseRoutes: RouteRecordRaw[] = normalizeJsonRoutes(qms_menu as JsonRoute[]);
 
+const DEFAULT_NOT_FOUND_PATH = '/not-found'
+
 export const createQmRouter = (history: RouterHistory) => {
   const router = createRouter({
     history,
@@ -51,8 +53,8 @@ export const createQmRouter = (history: RouterHistory) => {
 
   router.onError((error) => {
     console.error('[QM Router Error]', error)
-    if (router.currentRoute.value.path !== '/quality/not-found') {
-      void router.replace('/quality/not-found')
+    if (router.currentRoute.value.path !== DEFAULT_NOT_FOUND_PATH) {
+      void router.replace(DEFAULT_NOT_FOUND_PATH)
     }
   })
 

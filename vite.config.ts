@@ -1,18 +1,14 @@
 import { defineConfig } from 'vite'
 import vue from '@vitejs/plugin-vue'
+import qiankun from 'vite-plugin-qiankun'
 import { resolve } from 'path'
 
-const qiankunHtmlCompatPlugin = () => ({
-  name: 'qiankun-html-compat',
-  transformIndexHtml(html: string) {
-    // 避免生命周期函数无法被主应用识别
-    return html.replace(/<script\s+type="module"\s+/g, '<script ')
-  },
-})
-
 export default defineConfig(({ command }) => ({
-  plugins: command === 'build' ? [vue(), qiankunHtmlCompatPlugin()] : [vue()],
-  base: command === 'serve' ? '/' : '/quality/',
+  plugins: [
+    vue(),
+    qiankun('qm-system', { useDevMode: true })
+  ],
+  base: command === 'serve' ? '/' : '/qm/',
   resolve: {
     alias: {
       '@': resolve(__dirname, 'src'),
@@ -28,10 +24,14 @@ export default defineConfig(({ command }) => ({
     rollupOptions: {
       input: resolve(__dirname, 'index.html'),
       output: {
-        format: 'iife', // 微前端必须 IIFE 格式
-        inlineDynamicImports: true, // 微前端需要内联
-        entryFileNames: 'assets/qm-system.js',
+        format: 'es', // 微前端 ESM 格式，启用代码分割
+        entryFileNames: 'assets/[name]-[hash].js',
+        chunkFileNames: 'assets/[name]-[hash].js',
         assetFileNames: 'assets/[name]-[hash][extname]',
+        manualChunks: {
+          tdesign: ['tdesign-vue-next'],
+          vue: ['vue', 'vue-router', 'pinia', 'vue-i18n'],
+        }
       },
     },
   },
@@ -46,12 +46,12 @@ export default defineConfig(({ command }) => ({
   server: {
     host: '0.0.0.0',  // 允许局域网访问，启动时会显示 Network 地址
     port: 5173,       // 开发时使用5173端口
+    cors: true,       // 【必须】允许跨域
+    headers: {        // 【必须】qiankun 主应用需要通过 fetch 请求微应用资源
+      'Access-Control-Allow-Origin': '*'
+    },
     proxy: {
       '/api': {
-        target: 'http://localhost:7701',
-        changeOrigin: true,
-      },
-      '/api/qm': {
         target: 'http://localhost:7701',
         changeOrigin: true,
       },
