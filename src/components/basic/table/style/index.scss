@@ -1,0 +1,318 @@
+/* ===== CSS 变量定义 - 可重写 ===== */
+.jo-table-container {
+  position: relative;
+  /* 表头 */
+  --jo-table-header-bg: var(--bg-secondary, #f8fafc);
+  --jo-table-header-color: var(--text-main, #374151);
+  --jo-table-header-hover-bg: var(--color-hover, #e2e8f0);
+  --jo-table-header-border: var(--color-border, #e5e7eb);
+  
+  /* 过滤行 */
+  --jo-table-filter-bg: var(--bg-secondary, #f8fafc);
+  --jo-table-filter-border: var(--color-border, #e5e7eb);
+  --jo-table-filter-input-border: var(--color-border, #e2e8f0);
+  --jo-table-filter-input-focus-border: var(--color-primary, #3b82f6);
+  
+  /* 数据行 */
+  --jo-table-cell-bg: var(--bg-light, #fff);
+  --jo-table-cell-color: var(--text-main, #475569);
+  --jo-table-cell-border: var(--color-border, #f1f5f9);
+  --jo-table-cell-padding: 6px 10px;
+  
+  /* 斑马纹 */
+  --jo-table-stripe-bg: var(--bg-secondary, #fafbfc);
+  
+  /* 行悬停 */
+  --jo-table-hover-bg: var(--color-hover, #f1f5f9);
+  
+  /* 选中行 */
+  --jo-table-selected-bg: var(--color-primary-light, #eff6ff);
+  --jo-table-selected-color: var(--color-primary, #1e40af);
+  
+  /* 序号列 */
+  --jo-table-index-color: var(--text-dim, #6b7280);
+  --jo-table-index-width: 50px;
+  
+  /* 排序图标 */
+  --jo-table-sort-icon-color: var(--color-primary, #3b82f6);
+  
+  /* 扩展行 */
+  --jo-table-expand-bg: var(--bg-secondary, #f8fafc);
+  --jo-table-expand-border: var(--color-border, #e5e7eb);
+  
+  /* 空数据 */
+  --jo-table-empty-color: var(--text-disabled, #9ca3af);
+  
+  /* 滚动条 */
+  --jo-table-scrollbar-track: var(--color-border, #f1f5f9);
+  --jo-table-scrollbar-thumb: var(--text-disabled, #cbd5e1);
+  --jo-table-scrollbar-thumb-hover: var(--text-dim, #94a3b8);
+}
+
+/* 滚动条 */
+.jo-table-wrapper::-webkit-scrollbar {
+  width: 6px;
+  height: 6px;
+}
+
+.jo-table-wrapper::-webkit-scrollbar-track {
+  background: var(--jo-table-scrollbar-track);
+}
+
+.jo-table-wrapper::-webkit-scrollbar-thumb {
+  background: var(--jo-table-scrollbar-thumb);
+  border-radius: 3px;
+}
+
+.jo-table-wrapper::-webkit-scrollbar-thumb:hover {
+  background: var(--jo-table-scrollbar-thumb-hover);
+}
+
+.jo-table-wrapper {
+  overflow: auto;
+}
+
+.jo-table {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 12px;
+  min-width: 800px;
+  background: var(--jo-table-cell-bg);
+}
+
+/* 表头样式 - 紧凑 */
+.jo-table th {
+  background: var(--jo-table-header-bg);
+  font-weight: 600;
+  color: var(--jo-table-header-color);
+  padding: 8px 10px;
+  text-align: left;
+  border-bottom: 1px solid var(--jo-table-header-border);
+  white-space: nowrap;
+  position: sticky;
+  top: 0;
+  z-index: 10;
+}
+
+/* 可排序表头 */
+.jo-table-sortable {
+  cursor: pointer;
+  user-select: none;
+  transition: background-color 0.2s ease;
+}
+
+.jo-table-sortable:hover {
+  background: var(--jo-table-header-hover-bg);
+}
+
+.jo-table-header-content {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 4px;
+}
+
+.jo-table-sort-icon {
+  font-size: 10px;
+  color: var(--jo-table-sort-icon-color);
+  margin-left: auto;
+}
+
+/* 列宽调整器 */
+.jo-table-header-cell {
+  position: relative;
+}
+
+.jo-table-resizer {
+  position: absolute;
+  right: 0;
+  top: 0;
+  width: 4px;
+  height: 100%;
+  cursor: col-resize;
+  background: transparent;
+  z-index: 10;
+}
+
+.jo-table-resizer:hover {
+  background: var(--jo-table-filter-input-focus-border);
+  opacity: 0.5;
+}
+
+/* 过滤行 - 仿图2原生样式 */
+.jo-table-filter-row th.jo-table-filter-cell {
+  padding: 0 !important;
+  height: 24px;
+  background: var(--jo-table-header-bg); /* 背景色与列头一致 */
+  border-bottom: 1px solid var(--color-border);
+  border-right: 1px solid var(--color-border);
+  position: sticky;
+  z-index: 5;
+}
+
+.jo-table-filter-row th.jo-table-filter-cell {
+  top: v-bind('headerHeight + "px"'); /* 动态绑定 top 值 */
+}
+
+.jo-table-filter-row th:last-child {
+  border-right: none;
+}
+
+.jo-table-filter-input {
+  width: 100%;
+  height: 24px;
+  border: none;
+  outline: none;
+  padding: 0 4px;
+  font-size: 11px;
+  color: var(--text-main);
+  background: transparent;
+  display: block;
+  box-sizing: border-box;
+}
+
+.jo-table-filter-input::placeholder {
+  color: var(--text-disabled);
+  font-style: normal;
+  text-align: left;
+}
+
+.jo-table-filter-input:focus {
+  background: var(--jo-table-filter-bg);
+  box-shadow: inset 0 0 0 1px var(--jo-table-filter-input-focus-border);
+}
+
+.jo-table-filter-row :deep(.t-input__suffix) {
+  right: 2px;
+}
+
+/* 数据行 - 紧凑 */
+.jo-table td {
+  padding: var(--jo-table-cell-padding);
+  text-align: left;
+  border-bottom: 1px solid var(--jo-table-cell-border);
+  white-space: nowrap;
+  color: var(--jo-table-cell-color);
+  background: var(--jo-table-cell-bg);
+}
+
+/* 斑马纹 - 正确的 nth-child 选择 */
+.jo-table tbody tr.jo-table-row:nth-child(even) td {
+  background: var(--jo-table-stripe-bg);
+}
+
+/* 行悬停 */
+.jo-table tbody tr.jo-table-row:hover td {
+  background: var(--jo-table-hover-bg);
+}
+
+/* 选中行 */
+.jo-table-selected td {
+  background: var(--jo-table-selected-bg) !important;
+  color: var(--jo-table-selected-color);
+}
+
+/* 序号列 */
+.jo-table-index {
+  width: var(--jo-table-index-width);
+  text-align: center;
+  color: var(--jo-table-index-color);
+  font-weight: 500;
+}
+
+/* 复选框列 */
+.jo-table-check {
+  width: 40px;
+  text-align: center;
+  vertical-align: middle;
+  padding-left: 10px;
+  padding-right: 6px;
+}
+
+.jo-table-check :deep(.t-checkbox) {
+  display: inline-flex;
+}
+
+/* 扩展列 */
+.jo-table-expand-header {
+  width: 40px;
+  text-align: center;
+  padding: 0;
+}
+
+.jo-table-expand {
+  width: 40px;
+  text-align: center;
+  padding: 0;
+}
+
+.jo-table-expand :deep(.t-button) {
+  min-width: 24px;
+  width: 24px;
+  height: 24px;
+  padding: 0;
+}
+
+/* 扩展行 */
+.jo-table-expand-row {
+  background: var(--jo-table-expand-bg) !important;
+}
+
+.jo-table-expand-row td {
+  background: var(--jo-table-expand-bg) !important;
+  padding: 12px 16px;
+  border-bottom: 1px solid var(--jo-table-expand-border);
+  white-space: normal;
+}
+
+/* 空数据 */
+.jo-table-empty {
+  text-align: center;
+  color: var(--jo-table-empty-color);
+  font-style: italic;
+  padding: 20px;
+  background: var(--jo-table-cell-bg);
+}
+
+/* 列设置弹窗 */
+.jo-table-settings {
+  padding: 8px;
+}
+
+.settings-section {
+  margin-bottom: 20px;
+}
+
+.settings-title {
+  font-weight: 600;
+  color: var(--text-main);
+  margin-bottom: 12px;
+  font-size: 14px;
+}
+
+.settings-columns {
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  gap: 8px;
+}
+
+.settings-column-item {
+  padding: 4px;
+}
+
+.settings-sort-hint {
+  color: var(--text-dim);
+  font-size: 12px;
+  padding: 8px;
+  background: var(--bg-secondary);
+  border-radius: 4px;
+}
+
+.settings-actions {
+  display: flex;
+  justify-content: flex-end;
+  gap: 8px;
+  margin-top: 16px;
+  padding-top: 16px;
+  border-top: 1px solid var(--color-border);
+}

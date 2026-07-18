@@ -3,12 +3,16 @@
 @import './theme-purple.css';
 
 /* 应用主题变量到全局元素 */
-html {
+html,
+body {
+  height: 100%;
+  margin: 0;
+  padding: 0;
+  overflow: hidden;
   transition: background-color var(--transition-slow), color var(--transition-slow);
 }
 
 body {
   background: var(--color-background);
   color: var(--color-text-primary);
-  transition: background-color var(--transition-slow), color var(--transition-slow);
 }

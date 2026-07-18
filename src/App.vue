@@ -1,5 +1,5 @@
 <template>
-  <div class="qm-app">
+  <div class="qm-app" :data-embedded="isEmbedded">
     <router-view v-slot="{ Component, route }">
       <keep-alive :include="keepAliveRouteNames">
         <component :is="Component" :key="route.fullPath" />
@@ -13,6 +13,7 @@ import { computed, ref, onMounted, onUnmounted } from 'vue'
 import { useRouter } from 'vue-router'
 
 const router = useRouter()
+const isEmbedded = computed(() => !!(window as any).__POWERED_BY_QIANKUN__)
 
 // 根据静态配置初始化 keep-alive 页面路由名
 const staticKeepAliveNames = router.getRoutes()
@@ -74,8 +75,12 @@ onUnmounted(() => {
 .qm-app {
   box-sizing: border-box;
   color: var(--text-main);
-  min-height: 100vh;
+  height: 100vh;
   width: 100%;
+  overflow: auto;
+  scrollbar-gutter: stable;
+  scrollbar-color: rgba(144, 147, 153, 0.45) transparent;
+  scrollbar-width: thin;
 }
 
 .qm-app *,
@@ -89,6 +94,12 @@ onUnmounted(() => {
 }
 
 /* 嵌入模式样式 - 仅作用于子应用容器，避免影响宿主框架 */
+.qm-app[data-embedded="true"] {
+  height: 100%;
+  min-height: 0;
+  overflow: auto;
+}
+
 .qm-app[data-embedded="true"] .glass-background-layer {
   display: none !important;
 }

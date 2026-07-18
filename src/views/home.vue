@@ -1,7 +1,5 @@
 <template>
   <div class="portal-home">
-    <GlassBackgroundLayer />
-
     <div class="portal-container">
       <header class="portal-header">
         <GlassCard :padding="0" :border-radius="20" class="header-content">
@@ -248,7 +246,6 @@
 import { ref, computed, onMounted, onUnmounted } from 'vue'
 import { useRouter } from 'vue-router'
 import { useI18n } from 'vue-i18n'
-import GlassBackgroundLayer from '@/components/glass/GlassBackgroundLayer.vue'
 import GlassCard from '@/components/glass/GlassCard.vue'
 import qmsMenu from '@/router/qms_menu.json'
 import { setLanguage } from '@/locales'
