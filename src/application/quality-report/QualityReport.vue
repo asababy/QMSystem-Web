@@ -1,6 +1,6 @@
 <template>
   <div class="page">
-    <div class="card">
+    <GlassCard>
       <div class="title-row">
         <div>
           <h1>{{ t('qualityReport.title') }}</h1>
@@ -16,79 +16,30 @@
 
       <div class="main-content-row">
         <div class="filter-section">
-          <JoSearchPanel
-            ref="searchPanelRef"
-            :fields="searchFields"
-            :search-text="t('common.query')"
-            :reset-text="t('common.reset')"
-            v-model="searchValues"
-            :collapsible="true"
-            :collapsed="false"
-            @search="handleSearch"
-            @reset="handleReset"
-          />
+          <JoSearchPanel ref="searchPanelRef" :fields="searchFields" :search-text="t('common.query')"
+            :reset-text="t('common.reset')" v-model="searchValues" :collapsible="true" :collapsed="false"
+            :date-shortcuts="dateShortcuts" store-key="quality-report-presets"
+            @search="handleSearch" @reset="handleReset" @shortcut-click="handleDateShortcut" />
         </div>
       </div>
 
       <div class="action-section">
-        <div class="date-shortcuts">
-          <t-button
-            v-for="shortcut in dateShortcuts"
-            :key="shortcut"
-            theme="default"
-            size="small"
-            variant="text"
-            @click="handleDateShortcut(shortcut)"
-          >
-            {{ shortcut }}
-          </t-button>
-        </div>
         <div class="action-bar">
-          <t-button
-            class="action-preview"
-            theme="primary"
-            size="small"
-            variant="base"
-            :disabled="!canDownload"
-            @click="streamingPreview"
-          >
+          <t-button class="action-preview" theme="primary" size="small" variant="base" :disabled="!canDownload"
+            @click="streamingPreview">
             {{ t('qualityReport.preview') }}
           </t-button>
-          <t-button
-            theme="success"
-            size="small"
-            variant="base"
-            :disabled="!canDownload"
-            @click="downloadFile('excel')"
-          >
+          <t-button theme="success" size="small" variant="base" :disabled="!canDownload" @click="downloadFile('excel')">
             {{ t('qualityReport.downloadExcel') }}
           </t-button>
-          <t-button
-            theme="success"
-            size="small"
-            variant="base"
-            :disabled="!canDownload"
-            @click="downloadFile('pdf')"
-          >
+          <t-button theme="success" size="small" variant="base" :disabled="!canDownload" @click="downloadFile('pdf')">
             {{ t('qualityReport.downloadPdf') }}
           </t-button>
-          <t-button
-            theme="warning"
-            size="small"
-            variant="base"
-            :disabled="!canDownload"
-            @click="transmitToLme"
-          >
+          <t-button theme="warning" size="small" variant="base" :disabled="!canDownload" @click="transmitToLme">
             {{ t('qualityReport.transmitLme') }}
           </t-button>
-          <t-button
-            class="action-print"
-            theme="primary"
-            size="small"
-            variant="base"
-            :disabled="!canDownload"
-            @click="printReport"
-          >
+          <t-button class="action-print" theme="primary" size="small" variant="base" :disabled="!canDownload"
+            @click="printReport">
             {{ t('qualityReport.print') }}
           </t-button>
         </div>
@@ -109,19 +60,9 @@
         <pre class="api-result-content">{{ lmeResponseText }}</pre>
       </div>
 
-      <JoTable
-        ref="tableRef"
-        :data="rows"
-        :columns="tableColumns"
-        row-key="orderNumber"
-        :selectable="true"
-        v-model:selected-keys="selectedOrders"
-        :filterable="true"
-        :disabled-row="disabledRow"
-        max-height="520px"
-        @selection-change="onTableSelectionChange"
-        @sort-change="onTableSortChange"
-      >
+      <JoTable ref="tableRef" :data="rows" :columns="tableColumns" row-key="orderNumber" :selectable="true"
+        v-model:selected-keys="selectedOrders" :filterable="true" :disabled-row="disabledRow" max-height="520px"
+        @selection-change="onTableSelectionChange" @sort-change="onTableSortChange">
         <template #cell-bizTime="{ value }">
           {{ formatDateTime(value) }}
         </template>
@@ -136,31 +77,26 @@
       <!-- 选中订单明细区域 -->
       <div class="details-section" v-if="selectedOrders.length > 0">
         <div class="details-header">
-          <div>
-            <h3 class="details-title">{{ t('qualityReport.selectedDetails') }}</h3>
-            <div class="status-bar">
-              {{ t('qualityReport.selectedDetails') }}: {{ selectedOrders.length }} / {{ selectedOrderDetails.length }}
-              <span v-if="selectedOrders.length > 1 && !sameGradeValidation">({{ t('qualityReport.gradeMismatch') }})</span>
-            </div>
-            <div v-if="loadingDetails" class="progress-container">
-              <div class="progress-bar">
-                <div class="progress-fill" :style="{ width: (detailsProgress / detailsTotal) * 100 + '%' }"></div>
-              </div>
-              <div class="progress-text">
-                {{ t('qualityReport.loadingDetails', { current: detailsProgress, total: detailsTotal }) }}
-              </div>
-            </div>
-          </div>
-          <t-button
-            theme="primary"
-            size="small"
-            variant="base"
-            :loading="loadingDetails"
-            :disabled="loadingDetails"
-            @click="toggleDetailsView"
-          >
-            {{ loadingDetails ? t('common.loading') : (showDetails ? t('qualityReport.hideDetails') : t('qualityReport.showDetails')) }}
+          <h3 class="details-title">{{ t('qualityReport.selectedDetails') }}</h3>
+          <t-button theme="primary" size="small" variant="base" :loading="loadingDetails" :disabled="loadingDetails"
+            @click="toggleDetailsView">
+            {{ loadingDetails ? t('common.loading') : (showDetails ? t('qualityReport.hideDetails') :
+              t('qualityReport.showDetails')) }}
           </t-button>
+        </div>
+
+        <div class="status-bar">
+          {{ t('qualityReport.selectedDetails') }}: {{ selectedOrders.length }} / {{ selectedOrderDetails.length }}
+          <span v-if="selectedOrders.length > 1 && !sameGradeValidation">({{ t('qualityReport.gradeMismatch') }})</span>
+        </div>
+
+        <div v-if="loadingDetails" class="progress-container">
+          <div class="progress-bar">
+            <div class="progress-fill" :style="{ width: (detailsProgress / detailsTotal) * 100 + '%' }"></div>
+          </div>
+          <div class="progress-text">
+            {{ t('qualityReport.loadingDetails', { current: detailsProgress, total: detailsTotal }) }}
+          </div>
         </div>
 
         <div class="grade-warning" v-if="selectedOrders.length > 1 && !sameGradeValidation">
@@ -168,20 +104,11 @@
         </div>
 
         <div v-if="showDetails && selectedOrderDetails.length > 0" class="detail-table-wrapper">
-          <JoTable
-            ref="detailTableRef"
-            :data="selectedOrderDetails"
-            :columns="detailTableColumns"
-            row-key="barcode"
-            :selectable="false"
-            :showIndex="true"
-            :showFilters="true"
-            max-height="400px"
-            class="detail-jo-table"
-          />
+          <JoTable ref="detailTableRef" :data="selectedOrderDetails" :columns="detailTableColumns" row-key="barcode"
+            :selectable="false" :showIndex="true" :showFilters="true" max-height="400px" class="detail-jo-table" />
         </div>
       </div>
-    </div>
+    </GlassCard>
   </div>
 
   <JoToast ref="toastRef" />
@@ -197,6 +124,7 @@ export default {
 <script setup lang="ts">
 import { ref, computed, onMounted } from 'vue'
 import { useI18n } from 'vue-i18n'
+import GlassCard from '@/components/glass/GlassCard.vue'
 import JoTable from '@/components/basic/table/JoTable.vue'
 import JoSearchPanel from '@/components/basic/search-panel/JoSearchPanel.vue'
 import HomeNavButton from '@/components/layout/HomeNavButton.vue'
@@ -582,13 +510,6 @@ onMounted(() => {
   padding: 20px;
 }
 
-.card {
-  background: var(--card-bg);
-  border-radius: var(--radius-lg);
-  padding: 20px;
-  box-shadow: var(--shadow-md);
-}
-
 .title-row {
   display: flex;
   justify-content: space-between;
@@ -638,16 +559,32 @@ onMounted(() => {
 
 .action-section {
   display: flex;
-  justify-content: space-between;
+  justify-content: flex-end;
   align-items: center;
   margin-bottom: 16px;
   gap: 16px;
 }
 
-.date-shortcuts {
+.date-shortcuts-header {
   display: flex;
-  gap: 8px;
-  flex-wrap: wrap;
+  align-items: center;
+  gap: 4px;
+}
+
+.shortcuts-label {
+  font-size: 13px;
+  font-weight: 500;
+  color: var(--text-dim, #9ca3af);
+  margin-right: 4px;
+}
+
+.date-shortcuts-header :deep(.t-button) {
+  font-weight: 500;
+  color: var(--text-dim, #9ca3af);
+}
+
+.date-shortcuts-header :deep(.t-button:hover) {
+  color: var(--color-primary, #ff7828);
 }
 
 .action-bar {
@@ -664,7 +601,7 @@ onMounted(() => {
   border-radius: var(--radius-md);
   font-size: var(--font-size-sm);
   color: var(--text-dim);
-  margin-bottom: 16px;
+  width: 100%;
 }
 
 .api-result-panel {
@@ -704,15 +641,15 @@ onMounted(() => {
 .details-header {
   display: flex;
   justify-content: space-between;
-  align-items: flex-start;
-  margin-bottom: 16px;
+  align-items: center;
+  margin-bottom: 12px;
 }
 
 .details-title {
   font-size: var(--font-size-lg);
   font-weight: 600;
   color: var(--text-main);
-  margin: 0 0 8px 0;
+  margin: 0;
 }
 
 .grade-warning {
@@ -747,7 +684,7 @@ onMounted(() => {
   color: var(--text-dim);
 }
 
-.detail-table-wrapper {
-  margin-top: 16px;
-}
+// .detail-table-wrapper {
+//   margin-top: 16px;
+// }
 </style>

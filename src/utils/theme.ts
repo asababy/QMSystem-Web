@@ -28,6 +28,14 @@ export const setTheme = (theme?: string) => {
       return nextTheme
     }
     root.setAttribute('data-theme', nextTheme)
+    
+    // TDesign supports theme-mode="dark" for its built-in dark mode styles.
+    // For light and purple themes, we use the default (light) theme mode.
+    if (nextTheme === 'dark') {
+      root.setAttribute('theme-mode', 'dark')
+    } else {
+      root.removeAttribute('theme-mode')
+    }
   }
   
   currentTheme.value = nextTheme

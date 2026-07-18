@@ -2,54 +2,147 @@
 
 [data-theme="light"] {
   /* --- 1. 核心与文本颜色 (Core & Text) --- */
-  --color-background: #f8fafc;
+  --color-background: #fdfdfd;
+  --color-border-dark: #cbd5e1;
+  --color-border-light: #f1f5f9;
   --color-border: #e2e8f0;
   --color-surface: #ffffff;
   --color-text-disabled: #9ca3af;
   --color-text-muted: #6b7280;
-  --color-text-primary: #1e293b;
-  --color-text-secondary: #64748b;
+  --color-text-on-accent: #ffffff;
+  --color-text-on-danger: #f51818;
+  --color-text-on-primary: #ffffff;
+  --color-text-on-success: #ffffff;
+  --color-text-on-warning: #ffffff;
+  --color-text-primary: #111827;
+  --color-text-secondary: #4b5563;
 
   /* --- 2. 品牌与状态颜色 (Brand & State) --- */
-  --color-primary: #2563eb;
-  --color-success: #10b981;
+  --color-accent-dark: #059669;
+  --color-accent-light: #a7f3d0;
+  --color-accent: #34d399;
+  --color-danger-dark: #e11d48;
+  --color-danger-light: #ffe4e6;
+  --color-danger: #fb7185;
+  --color-primary-dark: #0284c7;
+  --color-primary-light: #e0f2fe;
+  --color-primary: #38bdf8;
   --color-success-dark: #059669;
-  --color-success-light: #d1fae5;
-  --color-warning: #f59e0b;
+  --color-success-light: #a7f3d0;
+  --color-success: #10b981;
   --color-warning-dark: #d97706;
-  --color-warning-light: #fef3c7;
-  --color-danger: #ef4444;
-  --color-danger-dark: #dc2626;
-  --color-danger-light: #fee2e2;
+  --color-warning-light: rgba(245, 158, 11, 0.1);
+  --color-warning: #f59e0b;
+  --gradient-primary: linear-gradient(135deg, #C154F0 0%, #FF66C4 100%);
 
   /* --- 3. 交互基础色 (Interaction Base) --- */
-  --color-disabled: #f1f5f9;
-  --color-hover: #e2e8f0;
+  --color-active: #fbcfe8;
+  --color-disabled: #f3e8ff;
+  --color-hover: #fce7f3;
 
-  /* --- 4. TDesign 组件颜色 --- */
-  --td-brand-color: #2563eb;
-  --td-brand-color-hover: #1d4ed8;
-  --td-brand-color-active: #1e40af;
+  /* --- 4. 表格组件 (Table) --- */
+  --color-table-border: var(--color-border-light);
+  --color-table-header-bg-color: var(--color-surface);
+  --color-table-main-bg-color: transparent;
+  --color-table-header-border: var(--color-border-light);
+  --color-table-readonly-bg: #e7e7e755;
+  --color-table-required-bg: rgba(250, 204, 21, 0.2);
+  --color-table-row-border: var(--color-border-light);
+  --color-table-row-hover-bg: rgba(14, 165, 233, 0.06);
+  --color-table-row-checked-bg: rgba(14, 165, 233, 0.12);
+  --color-table-row-checked-hover-bg: rgba(14, 165, 233, 0.18);
+  --color-table-cell-selected-bg: rgba(14, 165, 233, 0.15);
+  --color-table-cell-selected-border: #0ea5e9;
+  --color-table-search-bg: white;
 
-  /* --- 5. 卡片与面板 (Card & Panels) --- */
-  --card-bg: rgba(255, 255, 255, 0.7);
-  --glass-panel-bg: rgba(255, 255, 255, 0.7);
-  --glass-panel-border: rgba(255, 255, 255, 0.3);
+  /* --- 5. 侧边栏组件 (Sidebar) --- */
+  --color-brand-title: #111827;
+  --color-sidebar-active-bg: rgba(14, 165, 233, 0.15);
+  --color-sidebar-active: #0ea5e9;
+  --color-sidebar-background: #ffffff;
+  --color-sidebar-border: #f1f5f9;
+  --color-sidebar-text-hover: #111827;
+  --color-sidebar-text: #4b5563;
+
+  /* --- 6. 标签页组件 (Tabs) --- */
+  --color-tab-background: transparent;
+  --color-tab-hover-bg: #bdfb87;
+  --color-tab-close-bg-active: rgba(14, 165, 233, 0.2);
+  --color-tab-close-bg-inactive: rgba(107, 114, 128, 0.1);
+  --color-tab-selected: #faef58;
+  --color-tab-text-hover: #111827;
+  --color-tab-text-selected: var(--color-primary);
+  --color-tab-text-unselected: #4b5563;
+
+  /* --- 6.1 简易标签页组件 (Simple Tabs) --- */
+  --color-simpletab-background: rgba(107, 114, 128, 0.05);
+  --color-simpletab-hover-bg: rgba(107, 114, 128, 0.1);
+  --color-simpletab-close-bg-active: rgba(14, 165, 233, 0.15);
+  --color-simpletab-selected: #ffffff;
+  --color-simpletab-text-hover: #111827;
+  --color-simpletab-text-selected: #111827;
+  --color-simpletab-text-unselected: #4b5563;
+
+  /* --- 7. 卡片与面板 (Card & Panels) --- */
+  --j-card-shadow-hover: 0 10px 25px rgba(0, 0, 0, 0.08);
+  --color-card: #bdfcdd6c;
+  --color-card-border: 1px solid #f1f2f2;
   --glass-panel-bg-image: linear-gradient(to bottom, rgba(255, 255, 255, 0.4), rgba(255, 255, 255, 0.8), rgba(255, 255, 255, 0.4));
-  --j-card-bg-color: rgba(255, 255, 255, 0.7);
+  --glass-panel-slider-bg: rgba(0, 0, 0, 0.1);
+  --gradient-card: linear-gradient(135deg, #ffffff 0%, #f0feff 100%);
+  --gradient-card-transparent: linear-gradient(to bottom, color-mix(in srgb, var(--color-card) 10%, transparent) 0%, transparent 50%, color-mix(in srgb, var(--color-card) 10%, transparent) 100%);
+  --shadow-card: 0 4px 16px 0 rgba(84, 237, 240, 0.08);
 
-  /* --- 6. 按钮与阴影 (Buttons & Shadows) --- */
-  --gradient-primary: linear-gradient(135deg, #3b82f6 0%, #1d4ed8 100%);
-  --gradient-success: linear-gradient(135deg, #10b981 0%, #059669 100%);
-  --gradient-warning: linear-gradient(135deg, #f59e0b 0%, #d97706 100%);
-  --gradient-danger: linear-gradient(135deg, #ef4444 0%, #dc2626 100%);
-  --shadow-card: 0 4px 16px rgba(0, 0, 0, 0.08);
-  --shadow-card-hover: 0 12px 28px rgba(0, 0, 0, 0.12);
+  /* --- 8. 按钮与阴影 (Buttons & Shadows) --- */
+  --color-glass-button-bg: rgba(255, 255, 255, 0.08);
+  --color-glass-button-border: rgba(255, 255, 255, 0.15);
+  --color-glass-button-hover: rgba(255, 255, 255, 0.15);
+  --gradient-danger-button: linear-gradient(135deg, #f43f5e 0%, #e11d48 100%);
+  --gradient-primary-button: linear-gradient(135deg, #38bdf8 0%, #0ea5e9 100%);
+  --gradient-secondary-button: linear-gradient(135deg, #e0f2fe 0%, #bae6fd 100%);
+  --gradient-success-button: linear-gradient(135deg, #10b981 0%, #059669 100%);
+  --gradient-warning-button: linear-gradient(135deg, #f59e0b 0%, #d97706 100%);
+  --shadow-button-hover: 0 6px 14px rgba(14, 165, 233, 0.35);
+  --shadow-button: 0 4px 10px rgba(14, 165, 233, 0.25);
+  --shadow-danger-glow: 0 0 20px rgba(244, 63, 94, 0.3);
+  --shadow-primary-glow: 0 0 20px rgba(14, 165, 233, 0.5);
+  --shadow-success-glow: 0 0 20px rgba(16, 185, 129, 0.3);
+  --shadow-warning-glow: 0 0 20px rgba(245, 158, 11, 0.3);
 
-  /* --- 7. 全局布局 (Layout) --- */
-  --bg-light: #ffffff;
-  --bg-secondary: #f8fafc;
-  --text-main: #1e293b;
-  --text-dim: #64748b;
-  --border-glass: rgba(0, 0, 0, 0.08);
+  /* --- 9. 上下文菜单 (Context Menu) --- */
+  --color-contextmenu-active: #e0f2fe;
+  --color-contextmenu-bg: #f0f9ff;
+  --color-contextmenu-hover: #bae6fd;
+  --color-contextmenu-success-hover: rgba(16, 185, 129, 0.15);
+
+  /* --- 10. 登录界面专属 (Login UI) --- */
+  --login-card-shadow: 0 8px 32px rgba(14, 165, 233, 0.15);
+  --login-input-bg: rgba(14, 165, 233, 0.05);
+  --login-input-border: 1px solid rgba(14, 165, 233, 0.1);
+  --login-input-focus-bg: rgba(14, 165, 233, 0.12);
+  --login-input-focus-border: #38bdf8;
+  --login-input-shadow: none;
+  --login-pwd-toggle-hover: rgba(14, 165, 233, 0.15);
+
+  /* --- 11. 全局布局与杂项 (Layout & Misc) --- */
+  --footer-bg-gradient: linear-gradient(to bottom, rgba(255, 255, 255, 0.6) 0%, rgba(14, 165, 233, 0.02) 40%, rgba(14, 165, 233, 0.06) 100%);
+
+  /* --- 12. 玻璃拟态背景 (Glass Background) --- */
+  --glass-bg: linear-gradient(135deg, #f4f2fa 0%, #f4f2fa 50%, #fdfdfd 100%);
+  --glass-blob-1-bg: rgba(155, 143, 217, 0.7);
+  --glass-blob-2-bg: rgba(126, 182, 255, 0.65);
+  --glass-blob-3-bg: rgba(255, 141, 197, 0.65);
+
+  /* --- 13. TDesign & 子应用专属兼容 (TDesign & Child App Custom) --- */
+  --td-brand-color: var(--color-primary);
+  --td-brand-color-hover: var(--color-primary-dark);
+  --td-brand-color-active: var(--color-primary-dark);
+  --card-bg: var(--color-card);
+  --glass-panel-bg: var(--j-card-bg-color);
+  --glass-panel-border: var(--color-card-border);
+  --text-main: var(--color-text-primary);
+  --text-dim: var(--color-text-secondary);
+  --bg-light: var(--color-surface);
+  --bg-secondary: var(--color-background);
+  --border-glass: var(--color-border);
 }

@@ -21,18 +21,13 @@
           <JoSearchPanel ref="searchPanelRef" :fields="searchFields"
             :search-text="searchText || t('common.query', '查询')" :reset-text="resetText || t('common.reset', '重置')"
             :model-value="searchValues" @update:modelValue="onUpdateSearchValues" :collapsible="true" :collapsed="false"
-            @search="onSearch" @reset="$emit('reset')" />
+            :date-shortcuts="dateShortcuts" :store-key="`bill-list-presets-${title}`"
+            @search="onSearch" @reset="$emit('reset')" @shortcut-click="$emit('date-shortcut', $event)" />
         </div>
       </div>
 
-      <div class="action-section" v-if="(dateShortcuts && dateShortcuts.length > 0) || $slots.actions">
-        <div class="date-shortcuts" v-if="dateShortcuts && dateShortcuts.length > 0">
-          <t-button v-for="shortcut in dateShortcuts" :key="shortcut" theme="default" size="small" variant="text"
-            @click="$emit('date-shortcut', shortcut)">
-            {{ shortcut }}
-          </t-button>
-        </div>
-        <div class="action-bar" v-if="$slots.actions">
+      <div class="action-section" v-if="$slots.actions">
+        <div class="action-bar">
           <slot name="actions"></slot>
         </div>
       </div>
@@ -239,18 +234,33 @@ defineExpose({
 
 .action-section {
   display: flex;
-  justify-content: space-between;
+  justify-content: flex-end;
   align-items: center;
   margin-bottom: 4px;
   gap: 16px;
   padding: 4px 0;
 }
 
-.date-shortcuts {
+.date-shortcuts-header {
   display: flex;
-  gap: 8px;
-  flex-wrap: wrap;
   align-items: center;
+  gap: 4px;
+}
+
+.shortcuts-label {
+  font-size: 13px;
+  font-weight: 500;
+  color: var(--text-dim, #9ca3af);
+  margin-right: 4px;
+}
+
+.date-shortcuts-header :deep(.t-button) {
+  font-weight: 500;
+  color: var(--text-dim, #9ca3af);
+}
+
+.date-shortcuts-header :deep(.t-button:hover) {
+  color: var(--color-primary, #ff7828);
 }
 
 .action-bar {

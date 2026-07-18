@@ -550,51 +550,51 @@ defineExpose({
 .jo-table-container {
   position: relative;
   /* 表头 */
-  --jo-table-header-bg: #f8fafc;
-  --jo-table-header-color: #374151;
-  --jo-table-header-hover-bg: #e2e8f0;
-  --jo-table-header-border: #e5e7eb;
+  --jo-table-header-bg: var(--bg-secondary, #f8fafc);
+  --jo-table-header-color: var(--text-main, #374151);
+  --jo-table-header-hover-bg: var(--color-hover, #e2e8f0);
+  --jo-table-header-border: var(--border-glass, #e5e7eb);
   
   /* 过滤行 */
-  --jo-table-filter-bg: #f8fafc;
-  --jo-table-filter-border: #e5e7eb;
-  --jo-table-filter-input-border: #e2e8f0;
-  --jo-table-filter-input-focus-border: #3b82f6;
+  --jo-table-filter-bg: var(--bg-secondary, #f8fafc);
+  --jo-table-filter-border: var(--border-glass, #e5e7eb);
+  --jo-table-filter-input-border: var(--border-glass, #e2e8f0);
+  --jo-table-filter-input-focus-border: var(--color-primary, #3b82f6);
   
   /* 数据行 */
-  --jo-table-cell-bg: #fff;
-  --jo-table-cell-color: #475569;
-  --jo-table-cell-border: #f1f5f9;
+  --jo-table-cell-bg: var(--bg-light, #fff);
+  --jo-table-cell-color: var(--text-dim, #475569);
+  --jo-table-cell-border: var(--border-glass, #f1f5f9);
   --jo-table-cell-padding: 6px 10px;
   
   /* 斑马纹 */
-  --jo-table-stripe-bg: #fafbfc;
+  --jo-table-stripe-bg: var(--bg-secondary, #fafbfc);
   
   /* 行悬停 */
-  --jo-table-hover-bg: #f1f5f9;
+  --jo-table-hover-bg: var(--color-hover, #f1f5f9);
   
   /* 选中行 */
-  --jo-table-selected-bg: #eff6ff;
-  --jo-table-selected-color: #1e40af;
+  --jo-table-selected-bg: var(--color-table-row-checked-bg, rgba(249, 115, 22, 0.12));
+  --jo-table-selected-color: var(--color-primary, #1e40af);
   
   /* 序号列 */
-  --jo-table-index-color: #6b7280;
+  --jo-table-index-color: var(--text-dim, #6b7280);
   --jo-table-index-width: 50px;
   
   /* 排序图标 */
-  --jo-table-sort-icon-color: #3b82f6;
+  --jo-table-sort-icon-color: var(--color-primary, #3b82f6);
   
   /* 扩展行 */
-  --jo-table-expand-bg: #f8fafc;
-  --jo-table-expand-border: #e5e7eb;
+  --jo-table-expand-bg: var(--bg-secondary, #f8fafc);
+  --jo-table-expand-border: var(--border-glass, #e5e7eb);
   
   /* 空数据 */
-  --jo-table-empty-color: #9ca3af;
+  --jo-table-empty-color: var(--color-text-disabled, #9ca3af);
   
   /* 滚动条 */
-  --jo-table-scrollbar-track: #f1f5f9;
-  --jo-table-scrollbar-thumb: #cbd5e1;
-  --jo-table-scrollbar-thumb-hover: #94a3b8;
+  --jo-table-scrollbar-track: var(--bg-secondary, #f1f5f9);
+  --jo-table-scrollbar-thumb: var(--border-glass, #cbd5e1);
+  --jo-table-scrollbar-thumb-hover: var(--color-primary, #94a3b8);
 }
 
 /* 滚动条 */
@@ -692,8 +692,8 @@ defineExpose({
   padding: 0 !important;
   height: 24px;
   background: var(--jo-table-header-bg); /* 背景色与列头一致 */
-  border-bottom: 1px solid #e5e7eb;
-  border-right: 1px solid #f1f5f9;
+  border-bottom: 1px solid var(--jo-table-header-border);
+  border-right: 1px solid var(--jo-table-cell-border);
   position: sticky;
   z-index: 5;
 }
@@ -713,20 +713,20 @@ defineExpose({
   outline: none;
   padding: 0 4px;
   font-size: 11px;
-  color: #666;
+  color: var(--jo-table-cell-color);
   background: transparent;
   display: block;
   box-sizing: border-box;
 }
 
 .jo-table-filter-input::placeholder {
-  color: #bbb;
+  color: var(--color-text-disabled, #bbb);
   font-style: normal;
   text-align: left;
 }
 
 .jo-table-filter-input:focus {
-  background: #f8fafc;
+  background: var(--jo-table-header-bg);
   box-shadow: inset 0 0 0 1px var(--jo-table-filter-input-focus-border);
 }
 
@@ -833,7 +833,7 @@ defineExpose({
 
 .settings-title {
   font-weight: 600;
-  color: #374151;
+  color: var(--text-main, #374151);
   margin-bottom: 12px;
   font-size: 14px;
 }
@@ -849,10 +849,10 @@ defineExpose({
 }
 
 .settings-sort-hint {
-  color: #6b7280;
+  color: var(--text-dim, #6b7280);
   font-size: 12px;
   padding: 8px;
-  background: #f3f4f6;
+  background: var(--bg-secondary, #f3f4f6);
   border-radius: 4px;
 }
 
@@ -862,6 +862,6 @@ defineExpose({
   gap: 8px;
   margin-top: 16px;
   padding-top: 16px;
-  border-top: 1px solid #e5e7eb;
+  border-top: 1px solid var(--border-glass, #e5e7eb);
 }
 </style>

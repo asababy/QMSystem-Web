@@ -90,6 +90,7 @@ export default {
     networkRetry: '网络连接异常，请稍后重试',
   },
   qualityReport: {
+    quickFilter: '快捷过滤',
     title: '质量报告查询',
     subtitle: '按时间范围查询质量检测结果',
     preview: '预览',

@@ -1,5 +1,5 @@
 <template>
-  <div class="qm-app" :data-embedded="isEmbedded">
+  <div class="qm-app" :data-embedded="isEmbedded" :data-theme="currentTheme" :theme-mode="currentTheme">
     <router-view v-slot="{ Component, route }">
       <keep-alive :include="keepAliveRouteNames">
         <component :is="Component" :key="route.fullPath" />
@@ -11,6 +11,7 @@
 <script setup lang="ts">
 import { computed, ref, onMounted, onUnmounted } from 'vue'
 import { useRouter } from 'vue-router'
+import { currentTheme } from './utils/theme'
 
 const router = useRouter()
 const isEmbedded = computed(() => !!(window as any).__POWERED_BY_QIANKUN__)

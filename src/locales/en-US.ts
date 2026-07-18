@@ -90,6 +90,7 @@ export default {
     networkRetry: 'Network issue, please try again later',
   },
   qualityReport: {
+    quickFilter: 'Quick Filter',
     title: 'Quality Report Query',
     subtitle: 'Query quality inspection results by date range',
     preview: 'Preview',

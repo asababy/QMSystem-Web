@@ -29,8 +29,8 @@ const props = withDefaults(defineProps<Props>(), {
 
 const cardStyle = computed(() => {
   const styles: Record<string, string> = {
-    '--glass-card-padding': typeof props.padding === 'number' 
-      ? `${props.padding}px` 
+    '--glass-card-padding': typeof props.padding === 'number'
+      ? `${props.padding}px`
       : props.padding,
     '--glass-card-border-radius': `${props.borderRadius}px`,
     '--glass-card-blur': `${props.blurSigma}px`,
@@ -48,13 +48,16 @@ const cardStyle = computed(() => {
   border-radius: var(--glass-card-border-radius);
   backdrop-filter: blur(var(--glass-card-blur));
   -webkit-backdrop-filter: blur(var(--glass-card-blur));
-  background-color: var(--glass-card-bg, var(--j-card-bg-color, var(--card-bg, rgba(255, 255, 255, 0.6))));
+  background-color: var(--card-bg, rgba(255, 255, 255, 0.6));
   background-image: var(--glass-panel-bg-image, linear-gradient(to bottom, rgba(255, 255, 255, 0.1), rgba(255, 255, 255, 0.25), rgba(255, 255, 255, 0.1)));
   border: 1.2px solid var(--glass-card-border, var(--color-card-border, rgba(255, 255, 255, 0.08)));
-  box-shadow: 
+  box-shadow:
     var(--glass-card-shadow, var(--glass-panel-shadow, var(--shadow-card, 0 8px 32px rgba(0, 0, 0, 0.15)))),
     0 0 0 1px rgba(255, 255, 255, 0.05) inset;
-  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+  transition:
+    transform 0.3s cubic-bezier(0.4, 0, 0.2, 1),
+    box-shadow 0.3s cubic-bezier(0.4, 0, 0.2, 1),
+    border-color 0.3s cubic-bezier(0.4, 0, 0.2, 1);
   overflow: hidden;
 }
 
@@ -65,12 +68,10 @@ const cardStyle = computed(() => {
   left: 0;
   right: 0;
   height: 1px;
-  background: linear-gradient(
-    90deg,
-    transparent 0%,
-    rgba(255, 255, 255, 0.3) 50%,
-    transparent 100%
-  );
+  background: linear-gradient(90deg,
+      transparent 0%,
+      rgba(255, 255, 255, 0.3) 50%,
+      transparent 100%);
   opacity: 0.6;
 }
 
@@ -83,7 +84,7 @@ const cardStyle = computed(() => {
 /* 悬停效果 */
 .glass-card:hover {
   transform: translateY(-2px);
-  box-shadow: 
+  box-shadow:
     var(--glass-card-shadow-hover, var(--j-card-shadow-hover, var(--shadow-card-hover, 0 16px 40px rgba(0, 0, 0, 0.2)))),
     0 0 0 1px rgba(255, 255, 255, 0.08) inset;
   border-color: var(--glass-card-border-hover, var(--color-card-border, rgba(255, 255, 255, 0.2)));
@@ -97,11 +98,9 @@ const cardStyle = computed(() => {
   left: -50%;
   width: 200%;
   height: 200%;
-  background: radial-gradient(
-    circle at center,
-    rgba(255, 255, 255, 0.1) 0%,
-    transparent 70%
-  );
+  background: radial-gradient(circle at center,
+      rgba(255, 255, 255, 0.1) 0%,
+      transparent 70%);
   opacity: 0;
   transition: opacity 0.3s ease;
   pointer-events: none;

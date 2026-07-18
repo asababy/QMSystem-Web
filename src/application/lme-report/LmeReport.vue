@@ -1,6 +1,6 @@
 <template>
   <div class="page">
-    <div class="card">
+    <GlassCard>
       <div class="title-row">
         <div>
           <h1>{{ t('lmeReport.title') }}</h1>
@@ -16,32 +16,10 @@
 
       <div class="main-content-row">
         <div class="filter-section">
-          <JoSearchPanel
-            ref="searchPanelRef"
-            :fields="searchFields"
-            :search-text="t('common.query')"
-            :reset-text="t('common.reset')"
-            v-model="searchValues"
-            :collapsible="true"
-            :collapsed="false"
-            @search="handleSearch"
-            @reset="handleReset"
-          />
-        </div>
-      </div>
-
-      <div class="action-section">
-        <div class="date-shortcuts">
-          <t-button
-            v-for="shortcut in dateShortcuts"
-            :key="shortcut"
-            theme="default"
-            size="small"
-            variant="text"
-            @click="handleDateShortcut(shortcut)"
-          >
-            {{ shortcut }}
-          </t-button>
+          <JoSearchPanel ref="searchPanelRef" :fields="searchFields" :search-text="t('common.query')"
+            :reset-text="t('common.reset')" v-model="searchValues" :collapsible="true" :collapsed="false"
+            :date-shortcuts="dateShortcuts" store-key="lme-report-presets"
+            @search="handleSearch" @reset="handleReset" @shortcut-click="handleDateShortcut" />
         </div>
       </div>
 
@@ -50,16 +28,8 @@
         <div>{{ t('common.allRecords', { count: rows.length }) }}</div>
       </div>
 
-      <JoTable
-        ref="tableRef"
-        :data="rows"
-        :columns="tableColumns"
-        row-key="id"
-        :selectable="false"
-        :filterable="true"
-        max-height="600px"
-        @sort-change="onTableSortChange"
-      >
+      <JoTable ref="tableRef" :data="rows" :columns="tableColumns" row-key="id" :selectable="false" :filterable="true"
+        max-height="600px" @sort-change="onTableSortChange">
         <template #cell-createTime="{ value }">
           {{ formatDateTime(value) }}
         </template>
@@ -73,13 +43,14 @@
           <span :class="getStatusClass(value)">{{ value || '-' }}</span>
         </template>
       </JoTable>
-    </div>
+    </GlassCard>
   </div>
 </template>
 
 <script setup lang="ts">
 import { ref, computed, onMounted } from 'vue'
 import { useI18n } from 'vue-i18n'
+import GlassCard from '@/components/glass/GlassCard.vue'
 import JoTable from '@/components/basic/table/JoTable.vue'
 import JoSearchPanel from '@/components/basic/search-panel/JoSearchPanel.vue'
 import HomeNavButton from '@/components/layout/HomeNavButton.vue'
@@ -277,11 +248,8 @@ onMounted(() => {
   padding: 24px;
 }
 
-.card {
-  background: var(--card-bg);
-  border-radius: var(--radius-lg);
-  box-shadow: var(--shadow-md);
-  padding: 20px 24px 24px;
+.page {
+  padding: 24px;
 }
 
 .title-row {
@@ -333,19 +301,26 @@ onMounted(() => {
   align-items: flex-start;
 }
 
-.action-section {
+.date-shortcuts-header {
   display: flex;
-  justify-content: flex-start;
   align-items: center;
-  gap: 20px;
-  padding: 10px 0;
+  gap: 4px;
 }
 
-.date-shortcuts {
-  display: flex;
-  flex-wrap: wrap;
-  gap: 8px;
-  align-items: center;
+.shortcuts-label {
+  font-size: 13px;
+  font-weight: 500;
+  color: var(--text-dim, #9ca3af);
+  margin-right: 4px;
+}
+
+.date-shortcuts-header :deep(.t-button) {
+  font-weight: 500;
+  color: var(--text-dim, #9ca3af);
+}
+
+.date-shortcuts-header :deep(.t-button:hover) {
+  color: var(--color-primary, #ff7828);
 }
 
 .status-bar {
@@ -355,16 +330,25 @@ onMounted(() => {
   border-radius: var(--radius-md);
   font-size: var(--font-size-sm);
   color: var(--text-dim);
-  margin-bottom: 12px;
 }
 
 .text-success {
-  color: var(--color-success);
+  background: var(--color-success-light);
+  color: var(--color-success-dark);
+  padding: 2px 8px;
+  border-radius: var(--radius-xl);
+  font-size: var(--font-size-xs);
   font-weight: 500;
+  display: inline-block;
 }
 
 .text-error {
-  color: var(--color-danger);
+  background: var(--color-danger-light);
+  color: var(--color-danger-dark);
+  padding: 2px 8px;
+  border-radius: var(--radius-xl);
+  font-size: var(--font-size-xs);
   font-weight: 500;
+  display: inline-block;
 }
 </style>
