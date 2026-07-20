@@ -1,5 +1,5 @@
 <template>
-  <div class="jo-table-container">
+  <div class="jo-table-container" ref="containerRef">
     <!-- 表格主体 -->
     <div class="jo-table-wrapper" :style="{ maxHeight: props.maxHeight }">
       <table class="jo-table">
@@ -182,7 +182,6 @@
     </t-dialog>
   </div>
 </template>
-
 <script setup lang="ts">
 import { ref, computed, watch, onMounted } from 'vue'
 
@@ -250,22 +249,7 @@ const columnOrder = ref<string[]>([])
 // 展开的行
 const expandedRows = ref<Set<string>>(new Set())
 
-// 表头高度，用于固定过滤行
-const headerHeight = ref(33) // 默认值设为 33px
-
-onMounted(() => {
-  const updateHeight = () => {
-    const headerCell = document.querySelector('.jo-table-header-cell')
-    if (headerCell) {
-      headerHeight.value = headerCell.getBoundingClientRect().height
-    }
-  }
-  
-  updateHeight()
-  // 在图片或字体加载后可能还会变化，稍微延迟再校准一次
-  setTimeout(updateHeight, 500)
-  window.addEventListener('resize', updateHeight)
-})
+// (No headerHeight JS measurement logic needed anymore, managed via CSS)
 
 // 列设置弹窗
 const showColumnSettings = ref(false)
@@ -628,6 +612,12 @@ defineExpose({
   background: var(--jo-table-cell-bg);
 }
 
+.jo-table thead {
+  position: sticky;
+  top: 0;
+  z-index: 10;
+}
+
 /* 表头样式 - 紧凑 */
 .jo-table th {
   background: var(--jo-table-header-bg);
@@ -637,9 +627,6 @@ defineExpose({
   text-align: left;
   border-bottom: 1px solid var(--jo-table-header-border);
   white-space: nowrap;
-  position: sticky;
-  top: 0;
-  z-index: 10;
 }
 
 /* 可排序表头 */
@@ -688,18 +675,13 @@ defineExpose({
 }
 
 /* 过滤行 - 仿图2原生样式 */
-.jo-table-filter-row th.jo-table-filter-cell {
+.jo-table-filter-row th {
   padding: 0 !important;
   height: 24px;
   background: var(--jo-table-header-bg); /* 背景色与列头一致 */
   border-bottom: 1px solid var(--jo-table-header-border);
   border-right: 1px solid var(--jo-table-cell-border);
-  position: sticky;
-  z-index: 5;
-}
-
-.jo-table-filter-row th.jo-table-filter-cell {
-  top: v-bind('headerHeight + "px"'); /* 动态绑定 top 值 */
+  box-sizing: border-box;
 }
 
 .jo-table-filter-row th:last-child {

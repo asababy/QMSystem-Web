@@ -18,12 +18,17 @@
         <div class="filter-section">
           <JoSearchPanel ref="searchPanelRef" :fields="searchFields" :search-text="t('common.query')"
             :reset-text="t('common.reset')" v-model="searchValues" :collapsible="true" :collapsed="false"
-            :date-shortcuts="dateShortcuts" store-key="quality-report-presets"
-            @search="handleSearch" @reset="handleReset" @shortcut-click="handleDateShortcut" />
+            :date-shortcuts="dateShortcuts" store-key="quality-report-presets" @search="handleSearch"
+            @reset="handleReset" @shortcut-click="handleDateShortcut" />
         </div>
       </div>
 
-      <div class="action-section">
+      <div class="status-bar">
+        <div class="status-left">
+          <span>{{ message }}</span>
+          <span class="record-count-sep">|</span>
+          <span class="record-count-text">{{ t('common.allRecords', { count: rows.length }) }}</span>
+        </div>
         <div class="action-bar">
           <t-button class="action-preview" theme="primary" size="small" variant="base" :disabled="!canDownload"
             @click="streamingPreview">
@@ -43,11 +48,6 @@
             {{ t('qualityReport.print') }}
           </t-button>
         </div>
-      </div>
-
-      <div class="status-bar">
-        <div>{{ message }}</div>
-        <div>{{ t('common.allRecords', { count: rows.length }) }}</div>
       </div>
 
       <div v-if="lmeResponseText" class="api-result-panel">
@@ -340,10 +340,9 @@ async function fetchData(isInitial: boolean) {
     hasError.value = false
     resetSelectionState()
 
-    const recordCount = rows.value.length
     message.value = isInitial
-      ? String(t('qualityReport.defaultQueryDone', { count: recordCount }))
-      : String(t('qualityReport.queryDone', { count: recordCount }))
+      ? `${t('common.queryDone')} (默认)`
+      : t('common.queryDone')
   } catch (error) {
     console.error('查询失败:', error)
     statusText.value = String(t('common.queryFailed'))
@@ -368,14 +367,7 @@ function resetSelectionState() {
 function onTableSelectionChange(keys: string[], selectedRows: QualityReportItem[]) {
   allSelected.value = keys.length === rows.value.length && rows.value.length > 0
   if (keys.length > 0) {
-    qualityReportApi.getDetailCounts(keys).then(counts => {
-      const totalDetailCount = keys.reduce((sum, orderNumber) => {
-        return sum + (counts[orderNumber] || 0)
-      }, 0)
-      message.value = `已选择 ${keys.length} 个订单, 共计 ${totalDetailCount} 行`
-    }).catch(() => {
-      message.value = `已选择 ${keys.length} 个订单`
-    })
+    message.value = `已选择 ${keys.length} 个订单`
 
     if (showDetails.value) {
       loadSelectedOrderDetails()
@@ -557,36 +549,6 @@ onMounted(() => {
   margin-bottom: 20px;
 }
 
-.action-section {
-  display: flex;
-  justify-content: flex-end;
-  align-items: center;
-  margin-bottom: 16px;
-  gap: 16px;
-}
-
-.date-shortcuts-header {
-  display: flex;
-  align-items: center;
-  gap: 4px;
-}
-
-.shortcuts-label {
-  font-size: 13px;
-  font-weight: 500;
-  color: var(--text-dim, #9ca3af);
-  margin-right: 4px;
-}
-
-.date-shortcuts-header :deep(.t-button) {
-  font-weight: 500;
-  color: var(--text-dim, #9ca3af);
-}
-
-.date-shortcuts-header :deep(.t-button:hover) {
-  color: var(--color-primary, #ff7828);
-}
-
 .action-bar {
   display: flex;
   gap: 8px;
@@ -596,12 +558,25 @@ onMounted(() => {
   display: flex;
   justify-content: space-between;
   align-items: center;
-  padding: 8px 12px;
+  padding: 6px 12px;
   background: var(--bg-secondary);
   border-radius: var(--radius-md);
   font-size: var(--font-size-sm);
   color: var(--text-dim);
   width: 100%;
+  min-height: 40px;
+  box-sizing: border-box;
+}
+
+.status-left {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.record-count-sep {
+  opacity: 0.35;
+  color: var(--text-dim);
 }
 
 .api-result-panel {

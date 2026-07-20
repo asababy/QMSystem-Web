@@ -84,9 +84,7 @@ onUnmounted(() => {
   scrollbar-width: thin;
 }
 
-.qm-app *,
-.qm-app *::before,
-.qm-app *::after {
+.qm-app * {
   box-sizing: border-box;
 }
 

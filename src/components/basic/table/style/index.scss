@@ -94,6 +94,11 @@
   z-index: 10;
 }
 
+.jo-table thead tr:first-child th {
+  height: 38px;
+  box-sizing: border-box;
+}
+
 /* 可排序表头 */
 .jo-table-sortable {
   cursor: pointer;
@@ -140,18 +145,16 @@
 }
 
 /* 过滤行 - 仿图2原生样式 */
-.jo-table-filter-row th.jo-table-filter-cell {
+.jo-table-filter-row th {
   padding: 0 !important;
   height: 24px;
   background: var(--jo-table-header-bg); /* 背景色与列头一致 */
-  border-bottom: 1px solid var(--color-border);
+  border-bottom: 1px solid var(--jo-table-header-border);
   border-right: 1px solid var(--color-border);
   position: sticky;
   z-index: 5;
-}
-
-.jo-table-filter-row th.jo-table-filter-cell {
-  top: v-bind('headerHeight + "px"'); /* 动态绑定 top 值 */
+  top: 38px; /* 固定粘性定位在 38px 高度 */
+  box-sizing: border-box;
 }
 
 .jo-table-filter-row th:last-child {
