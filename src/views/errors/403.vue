@@ -7,8 +7,12 @@
       <div class="icon-wrapper">
         <div class="icon-container error">
           <svg class="icon" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
-            <path d="M12 9V13M12 17H12.01M5.07183 19H18.9282C19.4817 19 19.8868 18.6056 19.8995 18.0523L19.9998 13.0523C20.0125 12.499 19.6181 12.094 19.0648 12.0813L12 11.9197L4.93523 12.0813C4.38194 12.094 3.98752 12.499 4.00022 13.0523L4.10052 18.0523C4.11322 18.6056 4.51833 19 5.07183 19Z" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
-            <path d="M12 3C10.9391 3 9.92172 3.42143 9.17157 4.17157C8.42143 4.92172 8 5.93913 8 7C8 8.06087 8.42143 9.07828 9.17157 9.82843C9.92172 10.5786 10.9391 11 12 11C13.0609 11 14.0783 10.5786 14.8284 9.82843C15.5786 9.07828 16 8.06087 16 7C16 5.93913 15.5786 4.92172 14.8284 4.17157C14.0783 3.42143 13.0609 3 12 3Z" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+            <path
+              d="M12 9V13M12 17H12.01M5.07183 19H18.9282C19.4817 19 19.8868 18.6056 19.8995 18.0523L19.9998 13.0523C20.0125 12.499 19.6181 12.094 19.0648 12.0813L12 11.9197L4.93523 12.0813C4.38194 12.094 3.98752 12.499 4.00022 13.0523L4.10052 18.0523C4.11322 18.6056 4.51833 19 5.07183 19Z"
+              stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" />
+            <path
+              d="M12 3C10.9391 3 9.92172 3.42143 9.17157 4.17157C8.42143 4.92172 8 5.93913 8 7C8 8.06087 8.42143 9.07828 9.17157 9.82843C9.92172 10.5786 10.9391 11 12 11C13.0609 11 14.0783 10.5786 14.8284 9.82843C15.5786 9.07828 16 8.06087 16 7C16 5.93913 15.5786 4.92172 14.8284 4.17157C14.0783 3.42143 13.0609 3 12 3Z"
+              stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" />
           </svg>
         </div>
         <div class="pulse-ring error"></div>
@@ -21,13 +25,15 @@
       <div class="actions">
         <button class="btn-primary" @click="goBack" :aria-label="t('common.back')">
           <svg class="btn-icon" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
-            <path d="M19 12H5M5 12L12 19M5 12L12 5" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+            <path d="M19 12H5M5 12L12 19M5 12L12 5" stroke="currentColor" stroke-width="2" stroke-linecap="round"
+              stroke-linejoin="round" />
           </svg>
           {{ t('common.back') }}
         </button>
         <button class="btn-secondary" @click="goHome" :aria-label="t('common.home')">
           <svg class="btn-icon" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
-            <path d="M3 12L5 10M5 10L12 3L19 10M5 10V20H19V10" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+            <path d="M3 12L5 10M5 10L12 3L19 10M5 10V20H19V10" stroke="currentColor" stroke-width="2"
+              stroke-linecap="round" stroke-linejoin="round" />
           </svg>
           {{ t('common.home') }}
         </button>
@@ -52,7 +58,7 @@ const goHome = () => {
 }
 </script>
 
-<style scoped>
+<style lang="scss" scoped>
 .unauthorized-page {
   --qm-primary: #2563eb;
   --qm-primary-hover: #1d4ed8;
@@ -68,23 +74,6 @@ const goHome = () => {
   --qm-shadow: rgba(0, 0, 0, 0.1);
   --qm-gradient-start: #fef2f2;
   --qm-gradient-end: #fee2e2;
-}
-
-[data-theme="dark"] {
-  --qm-primary: #3b82f6;
-  --qm-primary-hover: #60a5fa;
-  --qm-secondary: #94a3b8;
-  --qm-secondary-hover: #cbd5e1;
-  --qm-error: #ef4444;
-  --qm-error-hover: #f87171;
-  --qm-surface: #1e293b;
-  --qm-surface-hover: #334155;
-  --qm-text-primary: #f1f5f9;
-  --qm-text-secondary: #94a3b8;
-  --qm-border: #334155;
-  --qm-shadow: rgba(0, 0, 0, 0.3);
-  --qm-gradient-start: #450a0a;
-  --qm-gradient-end: #7f1d1d;
 }
 
 .unauthorized-page {
@@ -111,7 +100,7 @@ const goHome = () => {
 .pattern-grid {
   width: 100%;
   height: 100%;
-  background-image: 
+  background-image:
     linear-gradient(var(--qm-border) 1px, transparent 1px),
     linear-gradient(90deg, var(--qm-border) 1px, transparent 1px);
   background-size: 50px 50px;
@@ -119,8 +108,13 @@ const goHome = () => {
 }
 
 @keyframes patternFloat {
-  0% { transform: translate(0, 0); }
-  100% { transform: translate(50px, 50px); }
+  0% {
+    transform: translate(0, 0);
+  }
+
+  100% {
+    transform: translate(50px, 50px);
+  }
 }
 
 .card {
@@ -128,7 +122,7 @@ const goHome = () => {
   border-radius: 20px;
   padding: 3rem;
   text-align: center;
-  box-shadow: 
+  box-shadow:
     0 20px 25px -5px var(--qm-shadow),
     0 10px 10px -5px var(--qm-shadow);
   max-width: 480px;
@@ -141,7 +135,7 @@ const goHome = () => {
 
 .card:hover {
   transform: translateY(-2px);
-  box-shadow: 
+  box-shadow:
     0 25px 50px -12px var(--qm-shadow),
     0 20px 25px -5px var(--qm-shadow);
 }
@@ -170,9 +164,19 @@ const goHome = () => {
 }
 
 @keyframes errorShake {
-  0%, 100% { transform: translateX(0); }
-  25% { transform: translateX(-5px); }
-  75% { transform: translateX(5px); }
+
+  0%,
+  100% {
+    transform: translateX(0);
+  }
+
+  25% {
+    transform: translateX(-5px);
+  }
+
+  75% {
+    transform: translateX(5px);
+  }
 }
 
 .icon {
@@ -183,8 +187,15 @@ const goHome = () => {
 }
 
 @keyframes iconPulse {
-  0%, 100% { transform: scale(1); }
-  50% { transform: scale(1.05); }
+
+  0%,
+  100% {
+    transform: scale(1);
+  }
+
+  50% {
+    transform: scale(1.05);
+  }
 }
 
 .pulse-ring {
@@ -209,6 +220,7 @@ const goHome = () => {
     transform: translate(-50%, -50%) scale(1);
     opacity: 1;
   }
+
   100% {
     transform: translate(-50%, -50%) scale(1.4);
     opacity: 0;
@@ -246,7 +258,8 @@ p {
   flex-wrap: wrap;
 }
 
-.btn-primary, .btn-secondary {
+.btn-primary,
+.btn-secondary {
   display: inline-flex;
   align-items: center;
   gap: 0.5rem;
@@ -301,22 +314,24 @@ p {
     padding: 2rem;
     margin: 1rem;
   }
-  
+
   .actions {
     flex-direction: column;
   }
-  
-  .btn-primary, .btn-secondary {
+
+  .btn-primary,
+  .btn-secondary {
     width: 100%;
     justify-content: center;
   }
-  
+
   h1 {
     font-size: 1.75rem;
   }
 }
 
 @media (prefers-reduced-motion: reduce) {
+
   .pattern-grid,
   .icon,
   .pulse-ring,

@@ -2,7 +2,6 @@
 
 [data-theme="light"] {
   /* --- 1. 核心与文本颜色 (Core & Text) --- */
-  --color-background: #fdfdfd;
   --color-border-dark: #cbd5e1;
   --color-border-light: #f1f5f9;
   --color-border: #e2e8f0;

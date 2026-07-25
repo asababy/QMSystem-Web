@@ -14,7 +14,7 @@ import { useRouter } from 'vue-router'
 import { currentTheme } from './utils/theme'
 
 const router = useRouter()
-const isEmbedded = computed(() => !!(window as any).__POWERED_BY_QIANKUN__)
+const isEmbedded = computed(() => !!(window as any).__POWERED_BY_WUJIE__ || window.parent !== window)
 
 // 根据静态配置初始化 keep-alive 页面路由名
 const staticKeepAliveNames = router.getRoutes()
@@ -49,6 +49,12 @@ const handleHostTabClose = (e: Event) => {
   }
 }
 
+const handleWujieTabClose = (data: { path: string }) => {
+  if (data?.path) {
+    handleHostTabClose({ detail: data } as any)
+  }
+}
+
 // 重新激活路由时，如果它本身声明了 keepAlive，重新加入缓存池
 const removeAfterEach = router.afterEach((to) => {
   if (to.meta?.isKeepAlive && to.name) {
@@ -60,11 +66,19 @@ const removeAfterEach = router.afterEach((to) => {
 })
 
 onMounted(() => {
-  window.addEventListener('qiankun-tab-close', handleHostTabClose)
+  window.addEventListener('wujie-tab-close', handleHostTabClose)
+  const wujie = (window as any).$wujie
+  if (wujie?.bus) {
+    wujie.bus.$on('tab-close', handleWujieTabClose)
+  }
 })
 
 onUnmounted(() => {
-  window.removeEventListener('qiankun-tab-close', handleHostTabClose)
+  window.removeEventListener('wujie-tab-close', handleHostTabClose)
+  const wujie = (window as any).$wujie
+  if (wujie?.bus) {
+    wujie.bus.$off('tab-close', handleWujieTabClose)
+  }
   removeAfterEach()
 })
 </script>
@@ -76,30 +90,8 @@ onUnmounted(() => {
 .qm-app {
   box-sizing: border-box;
   color: var(--text-main);
-  height: 100vh;
   width: 100%;
-  overflow: auto;
-  scrollbar-gutter: stable;
-  scrollbar-color: rgba(144, 147, 153, 0.45) transparent;
-  scrollbar-width: thin;
-}
-
-.qm-app * {
-  box-sizing: border-box;
-}
-
-.qm-app :where(h1, h2, h3, h4, h5, h6, p) {
-  margin: 0;
-}
-
-/* 嵌入模式样式 - 仅作用于子应用容器，避免影响宿主框架 */
-.qm-app[data-embedded="true"] {
   height: 100%;
-  min-height: 0;
   overflow: auto;
-}
-
-.qm-app[data-embedded="true"] .glass-background-layer {
-  display: none !important;
 }
 </style>

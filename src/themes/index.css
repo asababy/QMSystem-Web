@@ -13,6 +13,5 @@ body {
 
 body,
 .qm-app {
-  background: var(--color-background);
   color: var(--color-text-primary);
 }

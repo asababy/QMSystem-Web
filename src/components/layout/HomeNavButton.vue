@@ -16,7 +16,7 @@ import { useI18n } from 'vue-i18n'
 const router = useRouter()
 const { t } = useI18n()
 
-const HOME_PATH = '/quality/qmshome'
+const HOME_PATH = '/home'
 const MAIN_HOME_PATH = '/index'
 
 function goHome() {
@@ -33,7 +33,7 @@ function goHome() {
   }
 
   // 微前端场景兜底：直接同步到主应用 hash
-  if ((window as any).__POWERED_BY_QIANKUN__) {
+  if ((window as any).__POWERED_BY_WUJIE__ || window.parent !== window) {
     const nextHash = `#/qm${HOME_PATH}`
     if (window.location.hash !== nextHash) {
       window.location.hash = nextHash
@@ -52,7 +52,7 @@ function goMainHome() {
     return
   }
 
-  if ((window as any).__POWERED_BY_QIANKUN__) {
+  if ((window as any).__POWERED_BY_WUJIE__ || window.parent !== window) {
     const nextHash = `#${MAIN_HOME_PATH}`
     if (window.location.hash !== nextHash) {
       window.location.hash = nextHash

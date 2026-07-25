@@ -245,11 +245,11 @@ onMounted(() => {
 
 <style scoped lang="scss">
 .page {
+  width: 100%;
+  min-width: 0;
+  min-height: 100%;
   padding: 24px;
-}
-
-.page {
-  padding: 24px;
+  box-sizing: border-box;
 }
 
 .title-row {

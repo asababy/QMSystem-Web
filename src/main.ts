@@ -6,10 +6,15 @@ import '@jovue/ui/style.css'
 import './themes/index.css'
 import App from './App.vue'
 import { createQmRouter, getQmMenuRoutes } from './router'
-import { getApiList } from './api/registry'
 import { createMemoryHistory, createWebHashHistory, type Router } from 'vue-router'
 import i18n, { setLanguage } from './locales'
 import { setTheme } from './utils/theme.ts'
+
+let app: VueApp | null = null
+let router: Router | null = null
+
+const DEFAULT_HOME_PATH = '/home'
+const QM_HOST_BASE = '/qm'
 
 type QmContext = {
   accessToken?: string
@@ -18,66 +23,99 @@ type QmContext = {
   theme?: string
 }
 
-type QmProps = QmContext & {
-  container?: Element
-  initialPath?: string
-  onNavigateHome?: () => void
-  onNavigate?: (path: string) => void
-  onMenuUpdate?: (routes: unknown[]) => void
-  onChildReady?: (api: QmChildApi) => void
-  onLogout?: () => void
-  onNotify?: (message: string, level?: string, title?: string) => void
-  onGlobalStateChange?: (
-    callback: (state: { locale?: string; language?: string; theme?: string }, prevState: { locale?: string; language?: string; theme?: string }) => void,
-    fireImmediately?: boolean
-  ) => void
-  offGlobalStateChange?: () => void
-}
-
 type QmChildApi = {
-  getMenu: () => unknown[]
+  getMenu: () => unknown
   getCurrentRoute: () => string
-  navigate: (path: string) => void
-  getApis: () => Array<{
-    code: string
-    name: string
-    route: string
-    method: 'GET' | 'POST' | 'PUT' | 'DELETE'
-    description?: string
-    module?: string
-  }>
+  navigate: (path: string) => Promise<void>
 }
 
-let app: VueApp | null = null
-let router: Router | null = null
-let microHashChangeHandler: (() => void) | null = null
-let removeRouterAfterEach: (() => void) | null = null
-let offGlobalStateChangeHandler: (() => void) | null = null
-let localThemeChangeHandler: ((e: Event) => void) | null = null
-let localLangChangeHandler: ((e: Event) => void) | null = null
-let currentProps: QmProps = {}
-
-const DEFAULT_HOME_PATH = '/home'
+type WujieHostProps = QmContext & {
+  embedded?: boolean
+  initialPath?: string
+  onChildReady?: (api: QmChildApi) => void
+  onMenuUpdate?: (routes: unknown) => void
+}
 
 const normalizeRoutePath = (path?: string): string => {
-  if (!path) return DEFAULT_HOME_PATH
+  if (!path || path === '/') return DEFAULT_HOME_PATH
   return path.startsWith('/') ? path : `/${path}`
 }
 
-const getPathFromHostHash = (): string => {
-  const hash = window.location.hash || ''
-  const qmPrefix = '#/qm'
-  if (!hash.startsWith(qmPrefix)) return DEFAULT_HOME_PATH
-  return normalizeRoutePath(hash.slice(qmPrefix.length))
+const normalizeHostPath = (path: string): string => {
+  if (!path || path === '/') return '/index'
+  return path.startsWith('/') ? path : `/${path}`
 }
 
-const applyContext = (props: QmProps = {}) => {
+const getWujieProps = (): WujieHostProps => {
+  return (((window as any).$wujie?.props as WujieHostProps | undefined) ?? {})
+}
+
+const isEmbeddedMode = (): boolean => {
+  return !!(window as any).__POWERED_BY_WUJIE__
+    || getWujieProps().embedded === true
+    || window.parent !== window
+}
+
+const getHostWindow = (): Window => {
+  try {
+    return window.parent && window.parent !== window ? window.parent : window
+  } catch {
+    return window
+  }
+}
+
+const getPathFromHostHash = (): string => {
+  const hostWin = getHostWindow()
+  const hash = hostWin.location.hash || ''
+  const qmPrefix = `#${QM_HOST_BASE}`
+  if (!hash.startsWith(qmPrefix)) return DEFAULT_HOME_PATH
+  const rawPath = hash.slice(qmPrefix.length)
+  return normalizeRoutePath(rawPath)
+}
+
+const resolveInitialEmbeddedPath = (): string => {
+  const initialPath = getWujieProps().initialPath
+  if (initialPath) return normalizeRoutePath(initialPath)
+  return getPathFromHostHash()
+}
+
+const isHostRoutePath = (path: string): boolean => {
+  return /^\/(index|login|403|404|bi|system)(\/|$)/.test(path)
+}
+
+const toHostPath = (path: string): string => {
+  const normalizedPath = normalizeHostPath(path)
+
+  if (normalizedPath === QM_HOST_BASE || normalizedPath.startsWith(`${QM_HOST_BASE}/`)) {
+    return normalizedPath
+  }
+
+  if (isHostRoutePath(normalizedPath)) {
+    return normalizedPath
+  }
+
+  return `${QM_HOST_BASE}${normalizedPath}`.replace(/\/+/g, '/')
+}
+
+const syncHostHash = (path: string): void => {
+  if (!isEmbeddedMode()) return
+
+  const hostWin = getHostWindow()
+  const nextHash = `#${toHostPath(path)}`
+  if (hostWin.location.hash !== nextHash) {
+    hostWin.location.hash = nextHash
+  }
+}
+
+const applyContext = (props: QmContext = {}): void => {
   if (typeof props.accessToken === 'string' && props.accessToken) {
     localStorage.setItem('accessToken', props.accessToken)
   }
+
   if (typeof props.locale === 'string' && props.locale) {
     setLanguage(props.locale)
   }
+
   if (typeof props.theme === 'string' && props.theme) {
     setTheme(props.theme)
   }
@@ -92,45 +130,91 @@ const applyContext = (props: QmProps = {}) => {
   }))
 }
 
-const bindBridge = (props: QmProps = {}) => {
-  window.qmBridge = {
-    navigateHome: () => props.onNavigateHome?.(),
-    navigate: (path: string) => props.onNavigate?.(path),
-    getCurrentRoute: () => router?.currentRoute.value.fullPath || DEFAULT_HOME_PATH,
-    logout: () => props.onLogout?.(),
-    notify: (message: string, level: string = 'info', title = String(i18n.global.t('app.notifyTitle'))) =>
-      props.onNotify?.(message, level, title),
+const initWujieSubApp = () => {
+  const wujie = (window as any).$wujie
+  if (wujie?.bus) {
+    wujie.bus.$on('theme-change', (theme: string) => {
+      if (theme) setTheme(theme)
+    })
+    wujie.bus.$on('locale-change', (lang: string) => {
+      if (lang) setLanguage(lang)
+    })
   }
 }
 
 const createChildApi = (): QmChildApi => ({
   getMenu: () => getQmMenuRoutes(),
   getCurrentRoute: () => router?.currentRoute.value.fullPath || DEFAULT_HOME_PATH,
-  navigate: (path: string) => {
+  navigate: async (path: string) => {
+    if (!router) return
+
     const nextPath = normalizeRoutePath(path)
-    void router?.replace(nextPath)
+    if (router.currentRoute.value.fullPath !== nextPath) {
+      await router.replace(nextPath)
+    }
   },
-  getApis: () => getApiList()
 })
 
-const render = async (props: QmProps = {}, isMicro = false) => {
-  currentProps = props
-  const container = props.container
-    ? (props.container.querySelector('#app') as HTMLElement | null)
-    : document.querySelector('#app')
+const navigateByBridge = (path: string): void => {
+  const normalizedPath = normalizeHostPath(path)
 
+  if (isEmbeddedMode()) {
+    syncHostHash(normalizedPath)
+    return
+  }
+
+  if (isHostRoutePath(normalizedPath) || normalizedPath === QM_HOST_BASE || normalizedPath.startsWith(`${QM_HOST_BASE}/`)) {
+    window.location.href = normalizedPath
+    return
+  }
+
+  void router?.replace(normalizeRoutePath(normalizedPath))
+}
+
+const exposeHostBridge = (): void => {
+  const childApi = createChildApi()
+  const wujieProps = getWujieProps()
+
+  window.qmBridge = {
+    navigateHome: () => {
+      navigateByBridge(DEFAULT_HOME_PATH)
+    },
+    navigate: (path: string) => {
+      navigateByBridge(path)
+    },
+    getCurrentRoute: () => childApi.getCurrentRoute(),
+    logout: () => {
+      navigateByBridge('/login')
+    },
+    notify: (message: string, level = 'info', title?: string) => {
+      const prefix = title ? `${title}: ` : ''
+      if (level === 'error') {
+        console.error(`[QM] ${prefix}${message}`)
+        return
+      }
+
+      if (level === 'warning') {
+        console.warn(`[QM] ${prefix}${message}`)
+        return
+      }
+
+      console.info(`[QM] ${prefix}${message}`)
+    },
+  }
+
+  wujieProps.onChildReady?.(childApi)
+  wujieProps.onMenuUpdate?.(getQmMenuRoutes())
+}
+
+const render = async () => {
+  const container = document.querySelector('#app')
   if (!container) return
 
+  const isEmbedded = isEmbeddedMode()
   const pinia = createPinia()
-  const history = isMicro ? createMemoryHistory() : createWebHashHistory()
+  const history = isEmbedded ? createMemoryHistory() : createWebHashHistory()
   router = createQmRouter(history)
-  if (removeRouterAfterEach) {
-    removeRouterAfterEach()
-    removeRouterAfterEach = null
-  }
-  removeRouterAfterEach = router.afterEach((to) => {
-    currentProps.onNavigate?.(to.fullPath)
-  })
+
   app = createApp(App)
   app.use(pinia)
   app.use(router)
@@ -138,160 +222,42 @@ const render = async (props: QmProps = {}, isMicro = false) => {
   app.use(TDesign)
   app.mount(container)
 
-  bindBridge(currentProps)
-  applyContext(props)
+  initWujieSubApp()
+  applyContext(getWujieProps())
+  exposeHostBridge()
 
-  // 绛夊緟璺敱鎸傝浇瀹屾垚鍚庡啀瀵艰埅
   await nextTick()
-  const targetPath = isMicro ? getPathFromHostHash() : normalizeRoutePath(props.initialPath)
+  const targetPath = isEmbedded ? resolveInitialEmbeddedPath() : DEFAULT_HOME_PATH
   await router.replace(targetPath)
 
-  // 寰墠绔ā寮忎笅锛氫富搴旂敤 hash 鍙樺寲鏃讹紝鍚屾瀛愬簲鐢?memory 璺敱
-  if (isMicro) {
+  if (isEmbedded) {
     const syncFromHostHash = async () => {
       if (!router) return
-
-      const hash = window.location.hash || ''
-      const qmPrefix = '#/qm'
-      if (!hash.startsWith(qmPrefix)) return
-
-      const nextPath = normalizeRoutePath(hash.slice(qmPrefix.length))
+      const hostWin = getHostWindow()
+      const hash = hostWin.location.hash || ''
+      const qmPrefix = `#${QM_HOST_BASE}`
+      let rawPath = ''
+      if (hash.startsWith(qmPrefix)) {
+        rawPath = hash.slice(qmPrefix.length)
+      }
+      const nextPath = rawPath ? normalizeRoutePath(rawPath) : resolveInitialEmbeddedPath()
       if (router.currentRoute.value.fullPath !== nextPath) {
         await router.replace(nextPath)
       }
     }
 
-    microHashChangeHandler = () => {
-      void syncFromHostHash()
-    }
-
-    window.addEventListener('hashchange', microHashChangeHandler)
-    // 棣栨鎸傝浇绔嬪嵆鍚屾涓€娆★紝瑕嗙洊鈥滅洿鎺ヨ緭鍏ュ湴鍧€鈥濅笉瑙﹀彂 hashchange 鐨勫満鏅?    await syncFromHostHash()
+    const hostWin = getHostWindow()
+    hostWin.addEventListener('hashchange', syncFromHostHash)
+    window.addEventListener('hashchange', syncFromHostHash)
+    await syncFromHostHash()
   }
 
-  if (isMicro) {
-    if (typeof props.onGlobalStateChange === 'function') {
-      props.onGlobalStateChange((state) => {
-        const lang = state?.language || state?.locale
-        if (lang) {
-          setLanguage(lang)
-        }
-        const theme = state?.theme
-        if (theme) {
-          setTheme(theme)
-        }
-      }, true)
-      offGlobalStateChangeHandler = () => {
-        props.offGlobalStateChange?.()
-      }
+  router.afterEach((to) => {
+    if (isEmbedded) {
+      syncHostHash(to.fullPath)
     }
-
-    localThemeChangeHandler = (e: Event) => {
-      const theme = (e as CustomEvent).detail?.theme
-      if (theme && currentProps.setGlobalState) {
-        currentProps.setGlobalState({ theme })
-      }
-    }
-    localLangChangeHandler = (e: Event) => {
-      const lang = (e as CustomEvent).detail?.lang
-      if (lang && currentProps.setGlobalState) {
-        let mappedLang = 'en'
-        if (lang.startsWith('zh')) {
-          mappedLang = 'zh'
-        } else if (lang.startsWith('id')) {
-          mappedLang = 'id'
-        }
-        currentProps.setGlobalState({ language: mappedLang })
-      }
-    }
-    window.addEventListener('qm:theme-changed', localThemeChangeHandler)
-    window.addEventListener('qm:lang-changed', localLangChangeHandler)
-
-    const childApi = createChildApi()
-    props.onChildReady?.(childApi)
-    props.onMenuUpdate?.(childApi.getMenu())
-  }
+  })
 }
 
-export async function bootstrap() {
-  // reserved for qiankun lifecycle
-}
-
-export async function mount(props: QmProps = {}) {
-  // 澶勭悊宓屽叆妯″紡
-  if ((props as any).hideMenu && (props as any).embedded) {
-    document.body.classList.add('embedded-mode')
-    // 设置 data 属性，支持样式隔离环境
-    const appContainer = document.querySelector('.qm-app')
-    if (appContainer) {
-      appContainer.setAttribute('data-embedded', 'true')
-    }
-  }
-
-  await render(props, true)
-}
-
-export async function unmount() {
-  // 绉婚櫎宓屽叆妯″紡鏍峰紡
-  document.body.classList.remove('embedded-mode')
-
-  if (!app) return
-  if (microHashChangeHandler) {
-    window.removeEventListener('hashchange', microHashChangeHandler)
-    microHashChangeHandler = null
-  }
-  if (localThemeChangeHandler) {
-    window.removeEventListener('qm:theme-changed', localThemeChangeHandler)
-    localThemeChangeHandler = null
-  }
-  if (localLangChangeHandler) {
-    window.removeEventListener('qm:lang-changed', localLangChangeHandler)
-    localLangChangeHandler = null
-  }
-  if (removeRouterAfterEach) {
-    removeRouterAfterEach()
-    removeRouterAfterEach = null
-  }
-  if (offGlobalStateChangeHandler) {
-    offGlobalStateChangeHandler()
-    offGlobalStateChangeHandler = null
-  }
-  app.unmount()
-  app = null
-  router = null
-  currentProps = {}
-  delete window.qmBridge
-}
-
-export async function update(props: QmProps = {}) {
-  currentProps = { ...currentProps, ...props }
-  bindBridge(currentProps)
-  applyContext(props)
-  if ((props.onChildReady || props.onMenuUpdate) && router) {
-    const childApi = createChildApi()
-    currentProps.onChildReady?.(childApi)
-    currentProps.onMenuUpdate?.(childApi.getMenu())
-  }
-  if (router && props.initialPath) {
-    const nextPath = normalizeRoutePath(props.initialPath)
-    if (router.currentRoute.value.fullPath !== nextPath) {
-      await router.replace(nextPath)
-    }
-  }
-}
-
-// vite-plugin-qiankun 鐢熷懡鍛ㄦ湡娉ㄥ唽锛堝紑鍙戞ā寮?ESM 鍏煎 + 鐢熶骇妯″紡閫氱敤锛塦r
-import { renderWithQiankun, qiankunWindow } from 'vite-plugin-qiankun/dist/helper'
-
-renderWithQiankun({
-  bootstrap,
-  mount,
-  unmount,
-  update,
-})
-
-// 鐙珛杩愯妯″紡锛堥潪 qiankun 鍔犺浇鏃剁洿鎺ユ覆鏌擄級
-if (!qiankunWindow.__POWERED_BY_QIANKUN__) {
-  render({}, false)
-}
-
+// 自动渲染应用
+render()

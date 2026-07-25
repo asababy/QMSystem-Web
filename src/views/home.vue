@@ -255,7 +255,7 @@ const router = useRouter()
 const { t, locale } = useI18n()
 
 // 是否嵌入到微前端主应用
-const isEmbedded = computed(() => !!(window as any).__POWERED_BY_QIANKUN__)
+const isEmbedded = computed(() => !!(window as any).__POWERED_BY_WUJIE__ || window.parent !== window)
 
 // 当前主题（用于下拉菜单的高亮）
 const currentThemeVal = ref(getCurrentTheme())
@@ -616,18 +616,18 @@ onUnmounted(() => {
 })
 </script>
 
-<style scoped>
+<style lang="scss" scoped>
 .portal-home {
-  position: relative;
-  min-height: 100%;
+  height: 100%;
   width: 100%;
-  padding-bottom: 40px;
+  box-sizing: border-box;
 }
 
 .portal-container {
-  position: relative;
-  z-index: 1;
-  padding: 20px;
+  padding: 24px;
+  max-width: 1600px;
+  margin: 0 auto;
+  box-sizing: border-box;
 }
 
 /* 章节标题 */
@@ -1208,40 +1208,5 @@ onUnmounted(() => {
 .empty-state p {
   margin-top: 12px;
   font-size: 14px;
-}
-
-/* 嵌入模式自适应微缩排版 */
-:global(.qm-app[data-embedded="true"]) .portal-header {
-  margin-bottom: 20px;
-}
-
-:global(.qm-app[data-embedded="true"]) .header-content :deep(.glass-card-content) {
-  padding: 12px 20px;
-  min-height: 64px;
-}
-
-:global(.qm-app[data-embedded="true"]) .logo-icon {
-  width: 40px;
-  height: 40px;
-  border-radius: 10px;
-}
-
-:global(.qm-app[data-embedded="true"]) .logo-icon :deep(.t-icon) {
-  font-size: 20px;
-}
-
-:global(.qm-app[data-embedded="true"]) .portal-title {
-  font-size: 18px;
-}
-
-:global(.qm-app[data-embedded="true"]) .portal-subtitle {
-  font-size: 11px;
-  margin-top: 2px;
-}
-
-@media (max-width: 1024px) {
-  .dashboard-row {
-    grid-template-columns: 1fr;
-  }
 }
 </style>

@@ -52,7 +52,7 @@ npm run build
 ## 🔧 架构特点
 
 ### 微前端接入
-- 作为 **qiankun 子应用** 挂载至底座系统。
+- 作为 **wujie 子应用** 挂载至底座系统。
 - 生产环境构建基础路径 (`base`) 设置为 `/qm/`，编译产物自动归档于 `QMSystem/WebPages/`，再由宿主动态托管。
 - 微前端模式下使用 `memory history` 路由，并在 `hashchange` 事件中与主应用保持 hash 同步。
 

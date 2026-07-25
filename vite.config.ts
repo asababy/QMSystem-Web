@@ -1,12 +1,10 @@
 import { defineConfig } from 'vite'
 import vue from '@vitejs/plugin-vue'
-import qiankun from 'vite-plugin-qiankun'
 import { resolve } from 'path'
 
 export default defineConfig(({ command }) => ({
   plugins: [
-    vue(),
-    qiankun('qm-system', { useDevMode: true })
+    vue()
   ],
   base: command === 'serve' ? '/' : '/qm/',
   resolve: {
@@ -47,7 +45,7 @@ export default defineConfig(({ command }) => ({
     host: '0.0.0.0',  // 允许局域网访问，启动时会显示 Network 地址
     port: 5173,       // 开发时使用5173端口
     cors: true,       // 【必须】允许跨域
-    headers: {        // 【必须】qiankun 主应用需要通过 fetch 请求微应用资源
+    headers: {        // 【必须】wujie 主应用需要通过 fetch 请求微应用资源
       'Access-Control-Allow-Origin': '*'
     },
     proxy: {
