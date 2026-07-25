@@ -12,16 +12,65 @@ function buildRequestUrl(baseUrl: string, path: string): string {
 }
 
 /**
+ * 递归为对象/数组创建属性名不区分大小写（Case-Insensitive）的访问代理
+ * 使得前端对 PascalCase 和 camelCase 都能自动识别命中
+ */
+export const makeCaseInsensitive = <T>(data: T): T => {
+  if (data === null || typeof data !== 'object' || data instanceof Date || data instanceof RegExp || data instanceof Blob || data instanceof FormData) {
+    return data
+  }
+
+  if (Array.isArray(data)) {
+    return data.map(item => makeCaseInsensitive(item)) as unknown as T
+  }
+
+  const targetObj = data as Record<string, any>
+  const keyMap = new Map<string, string>()
+
+  for (const key of Object.keys(targetObj)) {
+    keyMap.set(key.toLowerCase(), key)
+    if (targetObj[key] !== null && typeof targetObj[key] === 'object') {
+      targetObj[key] = makeCaseInsensitive(targetObj[key])
+    }
+  }
+
+  return new Proxy(targetObj, {
+    get(target, prop, receiver) {
+      if (typeof prop === 'string' && prop !== 'then' && prop !== 'toJSON' && prop !== 'constructor' && prop !== 'prototype') {
+        if (prop in target) {
+          return Reflect.get(target, prop, receiver)
+        }
+        const lowerProp = prop.toLowerCase()
+        const matchedKey = keyMap.get(lowerProp)
+        if (matchedKey && matchedKey in target) {
+          return Reflect.get(target, matchedKey, receiver)
+        }
+      }
+      return Reflect.get(target, prop, receiver)
+    },
+    has(target, prop) {
+      if (typeof prop === 'string') {
+        if (prop in target) return true
+        return keyMap.has(prop.toLowerCase())
+      }
+      return Reflect.has(target, prop)
+    }
+  }) as T
+}
+
+/**
  * 通用请求函数
  */
 async function request<T = any>(
   url: string,
   options: RequestInit = {}
 ): Promise<T> {
-  const token = localStorage.getItem('token')
+  const token = localStorage.getItem('accessToken') || localStorage.getItem('token')
+  const lang = localStorage.getItem('lang') || 'zh-CN'
   
   const headers: Record<string, string> = {
     'Content-Type': 'application/json',
+    'Accept-Language': lang,
     ...(options.headers as Record<string, string> || {}),
   }
 
@@ -51,7 +100,8 @@ async function request<T = any>(
 
     const isJsonResponse = contentType.includes('application/json') || contentType.includes('+json')
     if (isJsonResponse) {
-      return await response.json() as T
+      const jsonRes = await response.json()
+      return makeCaseInsensitive(jsonRes) as T
     }
 
     const isBinaryResponse =
@@ -71,7 +121,8 @@ async function request<T = any>(
     }
 
     try {
-      return JSON.parse(responseText) as T
+      const parsedRes = JSON.parse(responseText)
+      return makeCaseInsensitive(parsedRes) as T
     } catch {
       const preview = responseText.slice(0, 200)
       console.error(`Invalid JSON response from ${requestUrl}:`, preview)
