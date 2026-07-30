@@ -22,6 +22,16 @@ export const normalizeLanguage = (lang?: string): SupportedLanguage => {
 }
 
 export const getCurrentLanguage = (): SupportedLanguage => {
+  // When embedded in host app, prioritize host locale from Wujie props
+  const wujieProps = (window as any).$wujie?.props
+  if (wujieProps?.locale) {
+    const normalized = normalizeLanguage(wujieProps.locale)
+    if (normalized) {
+      return normalized
+    }
+  }
+  
+  // Fallback to localStorage when running standalone
   const fromStorage = localStorage.getItem(LANGUAGE_KEY)
   if (fromStorage) {
     return normalizeLanguage(fromStorage)

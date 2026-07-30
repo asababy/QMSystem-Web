@@ -4,8 +4,8 @@
   "type": "module",
   "scripts": {
     "dev": "vite",
-    "build": "node ./scripts/prebuild-clean.mjs && vite build",
-    "build:only": "node ./scripts/prebuild-clean.mjs && vite build",
+    "build": "node ./scripts/prebuild-clean.mjs && vite build && node -e \"console.log('\\n' + new Date().toLocaleString())\"",
+    "build:only": "node ./scripts/prebuild-clean.mjs && vite build && node -e \"console.log('\\n' + new Date().toLocaleString())\"",
     "preview": "vite preview"
   },
   "dependencies": {

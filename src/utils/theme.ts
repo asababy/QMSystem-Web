@@ -7,6 +7,14 @@ const DEFAULT_THEME: SupportedTheme = 'light'
 
 const getInitialTheme = (): SupportedTheme => {
   if (typeof window === 'undefined') return DEFAULT_THEME
+  
+  // When embedded in host app, prioritize host theme from Wujie props
+  const wujieProps = (window as any).$wujie?.props
+  if (wujieProps?.theme && (wujieProps.theme === 'light' || wujieProps.theme === 'dark' || wujieProps.theme === 'purple')) {
+    return wujieProps.theme
+  }
+  
+  // Fallback to localStorage when running standalone
   const stored = localStorage.getItem(THEME_KEY)
   return (stored === 'light' || stored === 'dark' || stored === 'purple') ? stored : DEFAULT_THEME
 }
