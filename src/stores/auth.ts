@@ -86,6 +86,9 @@ export const useAuthStore = defineStore('auth', () => {
       if (tokenResponse.success) {
         // 保存 JWT token
         localStorage.setItem('accessToken', tokenResponse.data.token)
+        if (tokenResponse.data.refreshToken) {
+          localStorage.setItem('refreshToken', tokenResponse.data.refreshToken)
+        }
         
         // 解析用户信息
         const userInfo = parseJwtToken(tokenResponse.data.token)
@@ -112,6 +115,7 @@ export const useAuthStore = defineStore('auth', () => {
       console.error('Logout failed:', error)
     } finally {
       localStorage.removeItem('accessToken')
+      localStorage.removeItem('refreshToken')
       user.value = null
       requiresAuthenticated.value = false
     }

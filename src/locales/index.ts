@@ -22,7 +22,7 @@ export const normalizeLanguage = (lang?: string): SupportedLanguage => {
 }
 
 export const getCurrentLanguage = (): SupportedLanguage => {
-  // When embedded in host app, prioritize host locale from Wujie props
+  // 嵌入底座时，优先使用无界传参的语言
   const wujieProps = (window as any).$wujie?.props
   if (wujieProps?.locale) {
     const normalized = normalizeLanguage(wujieProps.locale)

@@ -51,10 +51,13 @@ npm run build
 
 ## 🔧 架构特点
 
-### 微前端接入
+### 微前端接入与认证共享
 - 作为 **wujie 子应用** 挂载至底座系统。
 - 生产环境构建基础路径 (`base`) 设置为 `/qm/`，编译产物自动归档于 `QMSystem/WebPages/`，再由宿主动态托管。
 - 微前端模式下使用 `memory history` 路由，并在 `hashchange` 事件中与主应用保持 hash 同步。
+- **Token 联动与独立防关机制**：
+  - **微前端模式**：共享主应用 `localStorage.getItem('accessToken')` 凭据，主应用全局进行 55 分钟隐式预续期，子应用无缝保持最新 Token。
+  - **独立单机部署模式**：`src/api/utils/request.ts` 具备 401 自动捕捉与 `/api/auth/refresh-token` 端点重试功能，确保单机无主应用时也能实现 30 天无感免登录。
 
 ### 路由与菜单自动上报
 - 路由定义于 `src/router/qms_menu.json`，子应用挂载时会自动将路由表上报给主框架，由主框架动态组装并渲染左侧导航。

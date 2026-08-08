@@ -88,6 +88,41 @@ async function request<T = any>(
     const response = await fetch(requestUrl, config)
 
     if (!response.ok) {
+      if (response.status === 401) {
+        const refreshToken = localStorage.getItem('refreshToken')
+        if (refreshToken && !url.includes('/refresh-token')) {
+          try {
+            const refreshRes = await fetch(buildRequestUrl(BASE_URL, '/auth/refresh-token'), {
+              method: 'POST',
+              headers: { 'Content-Type': 'application/json' },
+              body: JSON.stringify({ refreshToken })
+            })
+            if (refreshRes.ok) {
+              const refreshJson = await refreshRes.json()
+              const resData = refreshJson.data || refreshJson
+              if (resData.token) {
+                localStorage.setItem('accessToken', resData.token)
+                if (resData.refreshToken) {
+                  localStorage.setItem('refreshToken', resData.refreshToken)
+                }
+                headers['Authorization'] = `Bearer ${resData.token}`
+                const retryRes = await fetch(requestUrl, { ...options, headers })
+                if (retryRes.ok) {
+                  const contentType = (retryRes.headers.get('content-type') || '').toLowerCase()
+                  if (contentType.includes('application/json')) {
+                    const jsonRes = await retryRes.json()
+                    return makeCaseInsensitive(jsonRes) as T
+                  }
+                  return {} as T
+                }
+              }
+            }
+          } catch {
+            localStorage.removeItem('accessToken')
+            localStorage.removeItem('refreshToken')
+          }
+        }
+      }
       const responseText = await response.text()
       const preview = responseText.slice(0, 200)
       console.error(`HTTP ${response.status} error from ${requestUrl}:`, preview)

@@ -8,7 +8,7 @@ const DEFAULT_THEME: SupportedTheme = 'light'
 const getInitialTheme = (): SupportedTheme => {
   if (typeof window === 'undefined') return DEFAULT_THEME
   
-  // When embedded in host app, prioritize host theme from Wujie props
+  // 嵌入底座时，优先使用无界传参的主题
   const wujieProps = (window as any).$wujie?.props
   if (wujieProps?.theme && (wujieProps.theme === 'light' || wujieProps.theme === 'dark' || wujieProps.theme === 'purple')) {
     return wujieProps.theme

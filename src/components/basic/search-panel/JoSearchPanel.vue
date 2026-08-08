@@ -374,7 +374,7 @@ function applyPreset(preset: { name: string; values: Record<string, any> }) {
     }
   })
   
-  // Trigger search immediately
+  // 立即触发搜索
   onSearch()
 }
 
@@ -426,7 +426,7 @@ defineExpose({
   min-width: 0;
 }
 
-/* When expanded, show a divider line below the header */
+/* 展开时，在头部下方显示分割线 */
 .jo-search-panel-wrapper:not(.is-collapsed) .jo-search-header {
   border-bottom: 1px solid var(--border-glass, #e6ecf5);
 }
