@@ -4,6 +4,10 @@
 
 const BASE_URL = import.meta.env.VITE_API_BASE_URL || '/api'
 
+// 防抖机制
+const notificationHistory = new Map<string, number>();
+const NOTIFICATION_DEBOUNCE_MS = 5000; // 5秒内相同错误不重复弹窗
+
 const trimTrailingSlash = (value: string) => value.replace(/\/+$/, '')
 const ensureLeadingSlash = (value: string) => (value.startsWith('/') ? value : `/${value}`)
 
@@ -165,6 +169,27 @@ async function request<T = any>(
     }
   } catch (error) {
     console.error('Request error:', error)
+    
+    // 简化错误提示：只在控制台输出，不弹窗
+    // 防止服务器断开时重复弹窗
+    const errorKey = error instanceof Error ? error.message : String(error)
+    const now = Date.now()
+    const lastNotificationTime = notificationHistory.get(errorKey)
+    
+    if (!lastNotificationTime || now - lastNotificationTime >= NOTIFICATION_DEBOUNCE_MS) {
+      notificationHistory.set(errorKey, now)
+      
+      // 清理过期的记录
+      for (const [key, time] of notificationHistory.entries()) {
+        if (now - time > NOTIFICATION_DEBOUNCE_MS) {
+          notificationHistory.delete(key)
+        }
+      }
+      
+      // 只在首次错误时提示
+      console.warn('请求错误:', error)
+    }
+    
     throw error
   }
 }

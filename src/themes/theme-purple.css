@@ -41,7 +41,7 @@
 
   /* --- 4. 表格组件 (Table) --- */
   --color-table-border: var(--color-border-light);
-  --color-table-header-bg-color: var(--color-border-light);
+  --color-table-header-bg: var(--color-border-light);
   --color-table-main-bg-color: transparent;
   --color-table-header-border: var(--color-border-light);
   --color-table-readonly-bg: rgba(252, 223, 251, 0.12);
