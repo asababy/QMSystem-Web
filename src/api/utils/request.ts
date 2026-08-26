@@ -140,6 +140,12 @@ async function request<T = any>(
     const isJsonResponse = contentType.includes('application/json') || contentType.includes('+json')
     if (isJsonResponse) {
       const jsonRes = await response.json()
+      if (jsonRes && typeof jsonRes === 'object' && 'code' in jsonRes) {
+        const code = Number(jsonRes.code)
+        if (code !== 200 && code !== 0) {
+          throw new Error(jsonRes.message || `操作失败 (Code: ${code})`)
+        }
+      }
       return makeCaseInsensitive(jsonRes) as T
     }
 

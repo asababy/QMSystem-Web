@@ -34,7 +34,7 @@
   /* --- 3. 交互基础色 (Interaction Base) --- */
   --color-active: #5a5a5a;
   --color-disabled: #6b7280;
-  --color-hover: #5fa109;
+  --color-hover: rgba(255, 255, 255, 0.08);
 
   /* --- 4. 表格组件 (Table) --- */
   --color-table-border: #5a5a5a;
@@ -127,7 +127,6 @@
   --footer-bg-gradient: linear-gradient(to bottom, rgba(160, 160, 160, 0.4) 0%, rgba(160, 160, 160, 0.3) 50%, rgba(160, 160, 160, 0.4) 100%);
 
   /* --- 12. 玻璃拟态背景 (Glass Background) --- */
-  --glass-bg: linear-gradient(135deg, #1e1e2f 0%, #2a2a40 50%, #1e1e2f 100%);
   --glass-blob-1-bg: rgba(249, 115, 22, 0.35);
   --glass-blob-2-bg: rgba(251, 191, 36, 0.35);
   --glass-blob-3-bg: rgba(239, 68, 68, 0.35);

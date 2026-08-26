@@ -127,7 +127,6 @@
   --footer-bg-gradient: linear-gradient(to bottom, rgba(255, 255, 255, 0.6) 0%, rgba(14, 165, 233, 0.02) 40%, rgba(14, 165, 233, 0.06) 100%);
 
   /* --- 12. 玻璃拟态背景 (Glass Background) --- */
-  --glass-bg: linear-gradient(135deg, #f4f2fa 0%, #f4f2fa 50%, #fdfdfd 100%);
   --glass-blob-1-bg: rgba(155, 143, 217, 0.7);
   --glass-blob-2-bg: rgba(126, 182, 255, 0.65);
   --glass-blob-3-bg: rgba(255, 141, 197, 0.65);
