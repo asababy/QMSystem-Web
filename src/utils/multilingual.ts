@@ -51,56 +51,32 @@ export function getCurrentLang(): string {
 
 /**
  * 原生轻量多语言 JSON 解析函数（独立运行兜底）
+ * 前端彻底去除读取后端模型上的 JSON，全部走前端自身的多语言字典。
  */
-function fallbackGetLocalizedText(rawJson?: string, lang?: string): string {
+function fallbackGetLocalizedText(rawJson?: string): string {
   if (!rawJson) return '';
   if (typeof rawJson !== 'string') return String(rawJson);
 
-  const trimmed = rawJson.trim();
-  if (!trimmed.startsWith('{')) return rawJson;
-
-  try {
-    const parsed = JSON.parse(trimmed);
-    const targetLang = (lang || getCurrentLang()).toLowerCase();
-
-    // 1. 精确匹配（如 'zh-CN', 'en-US', 'id-ID'）
-    for (const [k, v] of Object.entries(parsed)) {
-      if (k.toLowerCase() === targetLang && typeof v === 'string') return v;
-    }
-
-    // 2. 短码匹配（如 'zh', 'en', 'id'）
-    const shortCode = targetLang.split('-')[0];
-    for (const [k, v] of Object.entries(parsed)) {
-      if (k.toLowerCase().startsWith(shortCode) && typeof v === 'string') return v;
-    }
-
-    // 3. 常见默认语言兜底
-    if (parsed['zh-CN']) return parsed['zh-CN'];
-    if (parsed['en-US']) return parsed['en-US'];
-
-    // 4. 首值兜底
-    const firstVal = Object.values(parsed).find(v => typeof v === 'string' && v);
-    return (firstVal as string) || rawJson;
-  } catch {
-    return rawJson;
-  }
+  const str = rawJson.trim();
+  
+  // QMSystem-UI 可能会作为独立应用，独立运行时直接返回 key 或原始文本。
+  return str;
 }
 
 /**
  * 通用多语言文本提取函数 (Bridge 模式)
  * 
  * @param rawJson 后端返回的原始 JSON 字符串（如 {"zh-CN":"首页","en-US":"Home"}）
- * @param lang 可选指定语言，不传则自动取当前系统语言
  * @returns 对应语言的纯文本字符串
  */
-export function getLocalizedText(rawJson?: string, lang?: string): string {
+export function getLocalizedText(rawJson?: string): string {
   const wujieProps = (window as any).$wujie?.props;
 
   // 1. 微前端环境下：优先调用主应用注入的高性能 Bridge 函数
   if (wujieProps?.getLocalizedText && typeof wujieProps.getLocalizedText === 'function') {
-    return wujieProps.getLocalizedText(rawJson, lang);
+    return wujieProps.getLocalizedText(rawJson);
   }
 
   // 2. 独立运行环境下：使用轻量原生纯函数解析
-  return fallbackGetLocalizedText(rawJson, lang);
+  return fallbackGetLocalizedText(rawJson);
 }

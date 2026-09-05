@@ -52,7 +52,7 @@
             <div class="jo-search-date-range">
               <t-date-picker
                 v-model="values[field.key + '_start']"
-                :placeholder="field.startPlaceholder || '开始日期'"
+                :placeholder="field.startPlaceholder || ''"
                 :size="size"
                 format="YYYY-MM-DD"
                 :enable-time-picker="false"
@@ -61,7 +61,7 @@
               <span class="jo-search-date-separator">-</span>
               <t-date-picker
                 v-model="values[field.key + '_end']"
-                :placeholder="field.endPlaceholder || '结束日期'"
+                :placeholder="field.endPlaceholder || ''"
                 :size="size"
                 format="YYYY-MM-DD"
                 :enable-time-picker="false"
@@ -75,7 +75,7 @@
             <span class="jo-search-label">{{ field.label }}</span>
             <t-date-picker
               v-model="values[field.key]"
-              :placeholder="field.placeholder || '请选择'"
+              :placeholder="field.placeholder || ''"
               :size="size"
               format="YYYY-MM-DD"
               :enable-time-picker="field.enableTimePicker || false"
@@ -89,7 +89,7 @@
             <t-select
               v-model="values[field.key]"
               :options="field.options || []"
-              :placeholder="field.placeholder || '请选择'"
+              :placeholder="field.placeholder || ''"
               :size="size"
               clearable
               @change="onChange"
@@ -101,7 +101,7 @@
             <span class="jo-search-label">{{ field.label }}</span>
             <t-input-number
               v-model="values[field.key]"
-              :placeholder="field.placeholder || '请输入'"
+              :placeholder="field.placeholder || ''"
               :size="size"
               clearable
               @change="onChange"
@@ -113,7 +113,7 @@
             <span class="jo-search-label">{{ field.label }}</span>
             <t-input
               v-model="values[field.key]"
-              :placeholder="field.placeholder || '请输入'"
+              :placeholder="field.placeholder || ''"
               :size="size"
               clearable
               @change="onChange"

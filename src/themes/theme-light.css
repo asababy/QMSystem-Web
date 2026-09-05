@@ -58,7 +58,8 @@
   --color-brand-title: #111827;
   --color-sidebar-active-bg: rgba(14, 165, 233, 0.15);
   --color-sidebar-active: #0ea5e9;
-  --j-card-bg-color: #ffffff;
+  --color-sidebar-background: transparent;
+  --color-sidebar-border-subtle: rgba(0, 0, 0, 0.05);
   --color-sidebar-border: #f1f5f9;
   --color-sidebar-text-hover: #111827;
   --color-sidebar-text: #4b5563;
@@ -83,10 +84,12 @@
   --color-simpletab-text-unselected: #4b5563;
 
   /* --- 7. 卡片与面板 (Card & Panels) --- */
+  --j-card-bg-color: #ffffff;
   --j-card-shadow-hover: 0 10px 25px rgba(0, 0, 0, 0.08);
   --color-card: #bdfcdd6c;
   --color-card-border: 1px solid #f1f2f2;
   --glass-panel-bg-image: linear-gradient(to bottom, rgba(255, 255, 255, 0.4), rgba(255, 255, 255, 0.8), rgba(255, 255, 255, 0.4));
+  --glass-panel-shadow: 0 8px 32px 0 rgba(0, 0, 0, 0.06), inset 0 1px 0 rgba(255, 255, 255, 0.8);
   --glass-panel-slider-bg: rgba(0, 0, 0, 0.1);
   --gradient-card: linear-gradient(135deg, #ffffff 0%, #f0feff 100%);
   --gradient-card-transparent: linear-gradient(to bottom, color-mix(in srgb, var(--color-card) 10%, transparent) 0%, transparent 50%, color-mix(in srgb, var(--color-card) 10%, transparent) 100%);

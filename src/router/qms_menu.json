@@ -1,41 +1,16 @@
 [
-  { "name": "Home", "path": "/", "meta": { "title": "QMS首页", "requiresAuth": true, "iconClass": "bi bi-house-door" }, "redirect": "/home" },
-  { "name":"QMSHome","path":"/home","component":"@/views/home.vue","meta":{"title":"QMS门户","requiresAuth":true,"iconClass":"bi bi-house-door"}},
+  { "name": "Home", "path": "/", "redirect": "/home", "meta": { "title": "QMS首页", "requiresAuth": true, "iconClass": "bi bi-house-door" } },
+  { "name": "QMSHome", "path": "/home", "component": "@/views/home.vue", "meta": { "title": "QMS门户", "requiresAuth": true, "iconClass": "bi bi-house-door" } },
   {
-    "name":"Quality",
-    "path":"/report",
-    "meta":{"title":"质量报告","requiresAuth":true,"iconClass":"bi bi-clipboard-data"},
-    "children":[
-      {
-        "name":"QualityReport",
-        "path":"coa",
-        "meta":{"title":"COA报告","requiresAuth":true,"isKeepAlive":true,"isTabCloseAlive":false,"order":1,"iconClass":"bi bi-clipboard-data","elmenuitemgroup":"质量报告"},
-        "component":"@/application/quality-report/QualityReport.vue"
-      },
-      {
-        "name":"LmeDetail",
-        "path":"lme",
-        "meta":{"title":"LME相关","requiresAuth":true,"isKeepAlive":true,"isTabCloseAlive":false,"order":2,"iconClass":"bi bi-clipboard-data","elmenuitemgroup":"质量报告"},
-        "component":"@/application/lme-report/LmeReport.vue"
-      }
+    "name": "Quality",
+    "path": "/report",
+    "meta": { "title": "质量报告", "requiresAuth": true, "iconClass": "bi bi-clipboard-data" },
+    "children": [
+      { "name": "QualityReport", "path": "coa", "component": "@/application/quality-report/QualityReport.vue", "meta": { "title": "COA报告", "requiresAuth": true, "isKeepAlive": true, "isTabCloseAlive": false, "order": 1, "iconClass": "bi bi-clipboard-data", "elmenuitemgroup": "质量报告" } },
+      { "name": "LmeDetail", "path": "lme", "component": "@/application/lme-report/LmeReport.vue", "meta": { "title": "LME相关", "requiresAuth": true, "isKeepAlive": true, "isTabCloseAlive": false, "order": 2, "iconClass": "bi bi-clipboard-data", "elmenuitemgroup": "质量报告" } }
     ]
   },
-  {
-    "name":"Unauthorized",
-    "path":"/unauthorized",
-    "meta":{"title":"访问未授权","requiresAuth":false,"iconClass":"bi bi-shield-exclamation"},
-    "component":"@/views/errors/403.vue"
-  },
-  {
-    "name":"NotFound",
-    "path":"/not-found",
-    "meta":{"title":"页面未找到","requiresAuth":false,"iconClass":"bi bi-search"},
-    "component":"@/views/errors/404.vue"
-  },
-  {
-    "name":"QualityCatchAll",
-    "path":"/:pathMatch(.*)*",
-    "meta":{"title":"页面未找到","requiresAuth":false,"iconClass":"bi bi-search"},
-    "redirect":"/not-found"
-  }
+  { "name": "Unauthorized", "path": "/unauthorized", "component": "@/views/errors/403.vue", "meta": { "title": "访问未授权", "requiresAuth": false, "iconClass": "bi bi-shield-exclamation" } },
+  { "name": "NotFound", "path": "/not-found", "component": "@/views/errors/404.vue", "meta": { "title": "页面未找到", "requiresAuth": false, "iconClass": "bi bi-search" } },
+  { "name": "QualityCatchAll", "path": "/:pathMatch(.*)*", "redirect": "/not-found", "meta": { "title": "页面未找到", "requiresAuth": false, "iconClass": "bi bi-search" } }
 ]

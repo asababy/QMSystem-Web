@@ -41,3 +41,5 @@ export interface Module {
   name: string
   [key: string]: any
 }
+
+export type { ApiResponse, PageResult } from './api.types'
