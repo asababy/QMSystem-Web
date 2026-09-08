@@ -14,7 +14,6 @@ let app: VueApp | null = null
 let router: Router | null = null
 
 const DEFAULT_HOME_PATH = '/home'
-const QM_HOST_BASE = '/qm'
 
 type QmContext = {
   accessToken?: string
@@ -31,6 +30,7 @@ type QmChildApi = {
 
 type WujieHostProps = QmContext & {
   embedded?: boolean
+  routerBase?: string
   initialPath?: string
   onChildReady?: (api: QmChildApi) => void
   onMenuUpdate?: (routes: unknown) => void
@@ -42,7 +42,7 @@ const normalizeRoutePath = (path?: string): string => {
 }
 
 const normalizeHostPath = (path: string): string => {
-  if (!path || path === '/') return '/index'
+  if (!path || path === '/') return DEFAULT_HOME_PATH
   return path.startsWith('/') ? path : `/${path}`
 }
 
@@ -56,6 +56,12 @@ const isEmbeddedMode = (): boolean => {
     || window.parent !== window
 }
 
+const getRouterBase = (): string => {
+  const propsBase = getWujieProps().routerBase
+  if (propsBase) return propsBase.startsWith('/') ? propsBase : `/${propsBase}`
+  return isEmbeddedMode() ? '/qm' : ''
+}
+
 const getHostWindow = (): Window => {
   try {
     return window.parent && window.parent !== window ? window.parent : window
@@ -67,9 +73,10 @@ const getHostWindow = (): Window => {
 const getPathFromHostHash = (): string => {
   const hostWin = getHostWindow()
   const hash = hostWin.location.hash || ''
-  const qmPrefix = `#${QM_HOST_BASE}`
-  if (!hash.startsWith(qmPrefix)) return DEFAULT_HOME_PATH
-  const rawPath = hash.slice(qmPrefix.length)
+  const base = getRouterBase()
+  const prefix = `#${base}`
+  if (!hash.startsWith(prefix)) return DEFAULT_HOME_PATH
+  const rawPath = hash.slice(prefix.length)
   return normalizeRoutePath(rawPath)
 }
 
@@ -79,33 +86,17 @@ const resolveInitialEmbeddedPath = (): string => {
   return getPathFromHostHash()
 }
 
-const isHostRoutePath = (path: string): boolean => {
-  return /^\/(index|login|403|404|bi|system)(\/|$)/.test(path)
-}
-
 const toHostPath = (path: string): string => {
   const normalizedPath = normalizeHostPath(path)
+  const base = getRouterBase()
 
-  if (normalizedPath === QM_HOST_BASE || normalizedPath.startsWith(`${QM_HOST_BASE}/`)) {
+  if (!base || normalizedPath === base || normalizedPath.startsWith(`${base}/`)) {
     return normalizedPath
   }
 
-  if (isHostRoutePath(normalizedPath)) {
-    return normalizedPath
-  }
-
-  return `${QM_HOST_BASE}${normalizedPath}`.replace(/\/+/g, '/')
+  return `${base}${normalizedPath}`.replace(/\/+/g, '/')
 }
 
-const syncHostHash = (path: string): void => {
-  if (!isEmbeddedMode()) return
-
-  const hostWin = getHostWindow()
-  const nextHash = `#${toHostPath(path)}`
-  if (hostWin.location.hash !== nextHash) {
-    hostWin.location.hash = nextHash
-  }
-}
 
 const applyContext = (props: QmContext = {}): void => {
   if (typeof props.accessToken === 'string' && props.accessToken) {
@@ -159,12 +150,11 @@ const navigateByBridge = (path: string): void => {
   const normalizedPath = normalizeHostPath(path)
 
   if (isEmbeddedMode()) {
-    syncHostHash(normalizedPath)
-    return
-  }
-
-  if (isHostRoutePath(normalizedPath) || normalizedPath === QM_HOST_BASE || normalizedPath.startsWith(`${QM_HOST_BASE}/`)) {
-    window.location.href = normalizedPath
+    const wujie = (window as any).$wujie
+    const hostTarget = toHostPath(normalizedPath)
+    if (wujie?.bus) {
+      wujie.bus.$emit('host-navigate', { path: hostTarget })
+    }
     return
   }
 
@@ -203,7 +193,6 @@ const exposeHostBridge = (): void => {
   }
 
   wujieProps.onChildReady?.(childApi)
-  wujieProps.onMenuUpdate?.(getQmMenuRoutes())
 }
 
 const render = async () => {
@@ -229,34 +218,6 @@ const render = async () => {
   await nextTick()
   const targetPath = isEmbedded ? resolveInitialEmbeddedPath() : DEFAULT_HOME_PATH
   await router.replace(targetPath)
-
-  if (isEmbedded) {
-    const syncFromHostHash = async () => {
-      if (!router) return
-      const hostWin = getHostWindow()
-      const hash = hostWin.location.hash || ''
-      const qmPrefix = `#${QM_HOST_BASE}`
-      let rawPath = ''
-      if (hash.startsWith(qmPrefix)) {
-        rawPath = hash.slice(qmPrefix.length)
-      }
-      const nextPath = rawPath ? normalizeRoutePath(rawPath) : resolveInitialEmbeddedPath()
-      if (router.currentRoute.value.fullPath !== nextPath) {
-        await router.replace(nextPath)
-      }
-    }
-
-    const hostWin = getHostWindow()
-    hostWin.addEventListener('hashchange', syncFromHostHash)
-    window.addEventListener('hashchange', syncFromHostHash)
-    await syncFromHostHash()
-  }
-
-  router.afterEach((to) => {
-    if (isEmbedded) {
-      syncHostHash(to.fullPath)
-    }
-  })
 }
 
 // 自动渲染应用
